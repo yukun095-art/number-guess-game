@@ -35,10 +35,15 @@
     }
 
     * { box-sizing: border-box; }
-    html { min-height: 100%; background: var(--bg); }
+    html {
+      min-height: 100%;
+      overflow-x: clip;
+      background: var(--bg);
+    }
     body {
       min-height: 100vh;
       margin: 0;
+      overflow-x: clip;
       color: var(--light);
       font-family: var(--font);
       letter-spacing: 0;
@@ -66,6 +71,7 @@
       inset: 0;
       z-index: 0;
       overflow: hidden;
+      max-width: 100vw;
       pointer-events: none;
     }
 
@@ -125,9 +131,21 @@
     .app {
       position: relative;
       z-index: 1;
-      width: min(1600px, calc(100% - 48px));
+      width: min(1600px, calc(100% - clamp(20px, 4vw, 48px)));
       margin: 0 auto;
       padding: clamp(14px, 2vh, 24px) 0 42px;
+    }
+
+    .app, .screen, .hero, .hero-copy, .home-top-card, .mode-grid, .mode-card, .rule-strip,
+    .nav, .nav-title, .hud, .hud-card, .game-layout, .play-card, .panel, .side-stack,
+    .keypad, .feedback-grid, .action-row, .pk-secrets, .pk-board, .settings-grid,
+    .advisor-tabs, .settlement-grid, .history-card, .empty-grid, .mini-tile {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    p, span, strong, b, button, input, select, .status, .subtitle, .history-main, .history-sub {
+      overflow-wrap: anywhere;
     }
 
     .screen { display: none; }
@@ -140,7 +158,7 @@
     .hero {
       position: relative;
       display: grid;
-      grid-template-columns: minmax(680px, 1fr) minmax(360px, 420px);
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
       gap: clamp(28px, 4vw, 64px);
       align-items: start;
       min-height: calc(100vh - 300px);
@@ -150,7 +168,7 @@
 
     .hero-copy {
       position: relative;
-      width: fit-content;
+      width: min(850px, 100%);
       max-width: 850px;
       padding: 14px 20px 16px;
       background:
@@ -198,7 +216,7 @@
       margin: 0 0 10px;
       max-width: 780px;
       font-family: "Courier New", "Lucida Console", "Microsoft YaHei UI", monospace;
-      font-size: clamp(64px, 5.6vw, 92px);
+      font-size: clamp(56px, 5.2vw, 92px);
       line-height: 1.05;
       color: oklch(0.95 0.065 82);
       -webkit-text-stroke: 3px oklch(0.25 0.07 48);
@@ -222,6 +240,7 @@
 
     .sigil-row {
       display: flex;
+      flex-wrap: wrap;
       gap: clamp(10px, 1.2vw, 16px);
       margin: clamp(14px, 2vh, 22px) 0 clamp(10px, 1.5vh, 16px);
     }
@@ -300,7 +319,7 @@
       position: relative;
       min-width: 0;
       margin-top: clamp(44px, 8vh, 92px);
-      margin-left: -56px;
+      margin-left: clamp(-56px, -3vw, -18px);
       padding: 24px 22px 22px;
       color: oklch(0.17 0.035 54);
       background:
@@ -543,7 +562,7 @@
 
     .nav {
       display: grid;
-      grid-template-columns: auto minmax(420px, 1fr) auto;
+      grid-template-columns: auto minmax(260px, 1fr) minmax(360px, .9fr);
       gap: 10px;
       align-items: center;
       margin-bottom: 16px;
@@ -611,7 +630,7 @@
 
     .game-layout {
       display: grid;
-      grid-template-columns: minmax(620px, .94fr) minmax(520px, 1.06fr);
+      grid-template-columns: minmax(420px, .92fr) minmax(420px, 1.08fr);
       gap: 18px;
       align-items: stretch;
       min-height: calc(100vh - 150px);
@@ -692,7 +711,7 @@
       place-items: center;
       min-width: 0;
       color: var(--light);
-      font-size: clamp(38px, 5vw, 64px);
+      font-size: clamp(34px, 4vw, 64px);
       line-height: 1;
       background:
         linear-gradient(135deg, rgba(255,255,255,.18) 0 18%, transparent 18%),
@@ -798,8 +817,10 @@
 
     .field input, .field select {
       width: 100%;
+      min-width: 0;
       min-height: 38px;
       padding: 6px 8px;
+      overflow-x: auto;
       color: var(--light);
       background: oklch(0.18 0.018 248);
       border: 3px solid var(--line);
@@ -1134,25 +1155,155 @@
     }
 
     @media (max-width: 980px) {
-      .hero, .nav, .game-layout {
-        grid-template-columns: 1fr;
+      .hero, .nav, .game-layout { grid-template-columns: 1fr; }
+      .hero { min-height: auto; padding-top: 20px; }
+      .hero-copy { width: 100%; }
+      .hud { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .mode-grid { grid-template-columns: 1fr; margin-top: 18px; }
+      .game-layout { min-height: auto; }
+    }
+
+    @media (max-width: 1439px) {
+      .app {
+        width: min(1360px, calc(100% - 28px));
       }
       .hero {
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+        gap: clamp(18px, 2.4vw, 34px);
         min-height: auto;
-        padding-top: 20px;
+        padding: clamp(22px, 4vh, 42px) clamp(24px, 4vw, 56px) 8px;
       }
-      .hero-copy {
+      h1 {
+        font-size: clamp(54px, 5vw, 78px);
+        -webkit-text-stroke-width: 2px;
+      }
+      .subtitle {
+        font-size: clamp(17px, 1.4vw, 22px);
+      }
+      .home-top-card {
+        margin-left: 0;
+        transform: translate(0, 12px) rotate(.18deg);
+      }
+      .mode-grid {
+        margin-top: clamp(18px, 3vh, 34px);
+        padding: 0 clamp(8px, 2vw, 28px);
+      }
+      .mode-card {
+        min-height: 260px;
+        padding: 18px 18px 16px;
+      }
+      .mode-card p {
+        max-width: 100%;
+      }
+      .nav {
+        grid-template-columns: auto minmax(220px, .7fr) minmax(330px, 1fr);
+      }
+      .game-layout {
+        grid-template-columns: minmax(380px, .95fr) minmax(380px, 1.05fr);
+        gap: 14px;
+        padding: 12px;
+      }
+      .play-card {
+        padding: 16px;
+      }
+      .hud {
+        grid-template-columns: repeat(4, minmax(68px, 1fr));
+      }
+      .hud-card strong, .metric strong {
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 1179px) {
+      .app {
+        width: min(100% - 24px, 980px);
+      }
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 22px clamp(10px, 3vw, 28px) 4px;
+      }
+      .home-top-card {
+        width: 100%;
+        margin-top: 18px;
+        transform: none;
+      }
+      .nav {
+        grid-template-columns: auto 1fr;
+      }
+      .hud {
+        grid-column: 1 / -1;
+      }
+      .game-layout {
+        grid-template-columns: 1fr;
+        align-items: start;
+        min-height: auto;
+      }
+      .play-card {
+        min-height: auto;
+      }
+      .side-stack {
+        min-height: auto;
+      }
+      .side-stack .panel:last-child {
+        min-height: 320px;
+      }
+      .history-list {
+        min-height: 220px;
+      }
+    }
+
+    @media (min-width: 981px) and (max-width: 1179px) {
+      .mode-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .mode-grid {
+        grid-template-columns: 1fr;
+      }
+      .nav {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+      .nav > .btn {
         width: 100%;
       }
       .hud {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .card-head {
+        align-items: start;
+        flex-direction: column;
+      }
+      .tag {
+        white-space: normal;
+      }
+      .digits {
+        gap: 5px;
+      }
+      .digit-cell {
+        border-width: 3px;
+        font-size: clamp(30px, 10vw, 52px);
+      }
+      .keypad {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+      .feedback-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
       }
-      .mode-grid {
+      .action-row, .settings-grid, .pk-secrets, .pk-board, .settlement-grid {
         grid-template-columns: 1fr;
-        margin-top: 18px;
       }
-      .game-layout {
-        min-height: auto;
+      .metrics, .empty-grid {
+        grid-template-columns: 1fr;
+      }
+      .history-card {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+      .history-card .hit {
+        grid-column: 1 / -1;
+        justify-self: start;
       }
     }
 
@@ -1163,7 +1314,7 @@
       }
       body {
         background:
-          url("assets/block-world-bg-v2.png?v=4") 42% top / auto 100vh no-repeat fixed,
+          url("assets/block-world-bg-v2.png?v=4") 42% top / auto 100vh no-repeat scroll,
           linear-gradient(180deg, var(--bg-2), var(--bg));
       }
       .home-top-card { min-width: 0; }
@@ -1201,6 +1352,9 @@
       .game-layout {
         padding: 8px;
         border-width: 4px;
+      }
+      .panel.pad, .play-card {
+        padding: 12px;
       }
       .btn {
         min-height: 44px;
