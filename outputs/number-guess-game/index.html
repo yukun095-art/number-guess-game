@@ -1,0 +1,3126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>弈数天机</title>
+  <style>
+    :root {
+      --bg: oklch(0.18 0.06 148);
+      --bg-2: oklch(0.50 0.14 218);
+      --table: oklch(0.25 0.052 154);
+      --table-dark: oklch(0.18 0.04 154);
+      --card: oklch(0.87 0.075 82);
+      --card-2: oklch(0.76 0.075 78);
+      --ink: oklch(0.15 0.018 248);
+      --light: oklch(0.94 0.018 82);
+      --muted: oklch(0.65 0.035 82);
+      --panel: oklch(0.25 0.028 248);
+      --panel-2: oklch(0.31 0.03 248);
+      --line: oklch(0.12 0.018 248);
+      --gold: oklch(0.79 0.15 84);
+      --green: oklch(0.58 0.135 142);
+      --green-dark: oklch(0.36 0.105 142);
+      --red: oklch(0.56 0.22 25);
+      --blue: oklch(0.69 0.12 218);
+      --purple: oklch(0.56 0.14 292);
+      --wood: oklch(0.58 0.095 68);
+      --wood-dark: oklch(0.38 0.075 58);
+      --focus: oklch(0.78 0.16 190);
+      --shadow: rgba(0, 0, 0, .42);
+      --font: "Courier New", "Lucida Console", monospace;
+      --ease-out-quart: cubic-bezier(.25, 1, .5, 1);
+      --ease-out-quint: cubic-bezier(.22, 1, .36, 1);
+      --ease-out-expo: cubic-bezier(.16, 1, .3, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--bg); }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--light);
+      font-family: var(--font);
+      letter-spacing: 0;
+      background:
+        url("assets/block-world-bg-v2.png?v=4") center top / cover fixed,
+        linear-gradient(180deg, var(--bg-2), var(--bg));
+      image-rendering: pixelated;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background: none;
+      opacity: 0;
+    }
+
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+
+    .minecraft-sky {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .float-block, .float-cloud, .torch-spark {
+      position: absolute;
+      image-rendering: pixelated;
+      will-change: transform, opacity;
+    }
+
+    .float-block {
+      width: var(--size, 42px);
+      height: var(--size, 42px);
+      left: var(--x, 50%);
+      top: var(--y, 20%);
+      opacity: .86;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.22) 0 18%, transparent 18%),
+        linear-gradient(180deg, oklch(0.68 0.18 132) 0 42%, oklch(0.50 0.12 88) 42% 58%, oklch(0.39 0.10 58) 58%);
+      border: 4px solid rgba(36, 24, 12, .72);
+      box-shadow: 6px 7px 0 rgba(38, 28, 13, .24), inset -6px -6px 0 rgba(25, 18, 10, .18), inset 5px 5px 0 rgba(255,255,255,.18);
+      animation: blockBob var(--dur, 7200ms) var(--ease-out-quart) infinite;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    .float-block.stone {
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.24) 0 16%, transparent 16%),
+        linear-gradient(180deg, oklch(0.72 0.02 245), oklch(0.48 0.018 245));
+    }
+
+    .float-cloud {
+      width: var(--w, 156px);
+      height: 48px;
+      left: var(--x, 10%);
+      top: var(--y, 12%);
+      opacity: .72;
+      background:
+        linear-gradient(oklch(0.96 0.01 235), oklch(0.96 0.01 235)) 0 18px / 54px 22px no-repeat,
+        linear-gradient(oklch(0.98 0.008 235), oklch(0.98 0.008 235)) 38px 0 / 62px 40px no-repeat,
+        linear-gradient(oklch(0.93 0.012 235), oklch(0.93 0.012 235)) 92px 18px / 64px 22px no-repeat;
+      filter: drop-shadow(4px 6px 0 rgba(42, 89, 132, .12));
+      animation: cloudDrift var(--dur, 26000ms) linear infinite;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    .torch-spark {
+      width: 8px;
+      height: 8px;
+      left: var(--x, 86%);
+      top: var(--y, 58%);
+      background: var(--gold);
+      box-shadow: 0 0 18px rgba(255, 204, 65, .72);
+      animation: sparkRise var(--dur, 2400ms) ease-out infinite;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(1600px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: clamp(14px, 2vh, 24px) 0 42px;
+    }
+
+    .screen { display: none; }
+    .screen.active {
+      display: block;
+      animation: screenRise 360ms var(--ease-out-quint) both;
+    }
+    .hidden { display: none !important; }
+
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(680px, 1fr) minmax(360px, 420px);
+      gap: clamp(28px, 4vw, 64px);
+      align-items: start;
+      min-height: calc(100vh - 300px);
+      margin-bottom: 0;
+      padding: clamp(34px, 6vh, 70px) clamp(70px, 6vw, 112px) 8px clamp(52px, 6vw, 96px);
+    }
+
+    .hero-copy {
+      position: relative;
+      width: fit-content;
+      max-width: 850px;
+      padding: 14px 20px 16px;
+      background:
+        radial-gradient(circle at 22px 22px, rgba(48, 25, 8, .78) 0 5px, transparent 6px),
+        radial-gradient(circle at calc(100% - 22px) 22px, rgba(48, 25, 8, .78) 0 5px, transparent 6px),
+        repeating-linear-gradient(0deg, rgba(73, 38, 12, .22) 0 10px, rgba(255, 236, 169, .12) 10px 20px),
+        linear-gradient(180deg, rgba(151, 91, 34, .90), rgba(104, 62, 24, .90));
+      border: 5px solid oklch(0.20 0.065 48);
+      box-shadow:
+        12px 13px 0 rgba(50, 30, 13, .45),
+        inset 0 0 0 6px rgba(255, 235, 172, .13),
+        inset 0 -14px 0 rgba(55, 31, 10, .18);
+    }
+
+    .hero::before {
+      display: none;
+    }
+
+    .hero > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-kicker {
+      display: inline-flex;
+      margin: 10px 0 8px 10px;
+      padding: 8px 14px 7px;
+      color: oklch(0.97 0.055 86);
+      font-size: clamp(13px, 1vw, 16px);
+      font-weight: 700;
+      letter-spacing: .10em;
+      background:
+        repeating-linear-gradient(0deg, rgba(70, 35, 10, .18) 0 7px, rgba(255, 232, 150, .08) 7px 14px),
+        oklch(0.50 0.11 70);
+      border: 4px solid oklch(0.23 0.07 48);
+      box-shadow:
+        5px 5px 0 rgba(66, 35, 12, .36),
+        inset 0 0 0 3px rgba(255, 235, 165, .18);
+      text-shadow:
+        2px 2px 0 oklch(0.21 0.055 46),
+        0 0 10px rgba(255, 232, 127, .34);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      max-width: 780px;
+      font-family: "Courier New", "Lucida Console", "Microsoft YaHei UI", monospace;
+      font-size: clamp(64px, 5.6vw, 92px);
+      line-height: 1.05;
+      color: oklch(0.95 0.065 82);
+      -webkit-text-stroke: 3px oklch(0.25 0.07 48);
+      text-shadow:
+        4px 4px 0 oklch(0.42 0.095 58),
+        8px 8px 0 rgba(72, 41, 15, .48),
+        0 5px 0 oklch(0.70 0.105 70);
+    }
+
+    .subtitle {
+      max-width: 76ch;
+      margin: 0;
+      color: oklch(0.95 0.045 86);
+      line-height: 1.45;
+      font-size: clamp(19px, 1.35vw, 25px);
+      font-weight: 700;
+      text-shadow:
+        2px 2px 0 oklch(0.25 0.075 48),
+        4px 4px 0 rgba(74, 42, 16, .36);
+    }
+
+    .sigil-row {
+      display: flex;
+      gap: clamp(10px, 1.2vw, 16px);
+      margin: clamp(14px, 2vh, 22px) 0 clamp(10px, 1.5vh, 16px);
+    }
+
+    .sigil-card {
+      width: clamp(64px, 7vw, 98px);
+      aspect-ratio: 3 / 4;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      font-size: clamp(38px, 4.6vw, 68px);
+      background:
+        repeating-linear-gradient(0deg, rgba(93, 53, 18, .14) 0 7px, rgba(255, 242, 182, .08) 7px 14px),
+        linear-gradient(135deg, rgba(255,255,255,.28) 0 16%, transparent 16%),
+        linear-gradient(180deg, oklch(0.92 0.07 85), oklch(0.78 0.08 75));
+      border: 5px solid var(--line);
+      box-shadow: 7px 9px 0 rgba(78, 42, 14, .42), inset -7px -7px 0 rgba(105, 67, 28, .18), inset 6px 6px 0 rgba(255, 247, 197, .32);
+      transform: rotate(var(--tilt, 0deg));
+      animation: sigilFloat 4200ms var(--ease-out-quart) infinite;
+      animation-delay: calc(var(--delay, 0) * 140ms);
+    }
+
+    .home-actions, .home-tools, .model-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .home-actions { margin-top: 20px; }
+    .home-actions .btn {
+      min-height: 52px;
+      padding-inline: 22px;
+      font-size: 20px;
+    }
+    .home-actions .btn.primary { min-width: 190px; }
+
+    .btn {
+      min-height: 44px;
+      padding: 8px 12px;
+      cursor: pointer;
+      color: var(--ink);
+      background: var(--wood);
+      border: 4px solid var(--line);
+      border-radius: 0;
+      box-shadow: 0 6px 0 var(--wood-dark);
+      transition: transform 120ms var(--ease-out-quart), box-shadow 120ms var(--ease-out-quart), filter 120ms var(--ease-out-quart), background-color 160ms var(--ease-out-quart);
+      touch-action: manipulation;
+    }
+
+    .btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .btn:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--wood-dark); }
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: .58;
+      filter: grayscale(.25);
+      transform: none;
+    }
+    .btn:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
+      outline: 4px solid var(--focus);
+      outline-offset: 3px;
+    }
+    .btn.primary { color: var(--light); background: var(--green); box-shadow: 0 6px 0 var(--green-dark); }
+    .btn.red { color: var(--light); background: var(--red); box-shadow: 0 6px 0 oklch(0.34 0.17 25); }
+    .btn.blue { color: var(--ink); background: var(--blue); box-shadow: 0 6px 0 oklch(0.44 0.09 218); }
+    .btn.purple { color: var(--light); background: var(--purple); box-shadow: 0 6px 0 oklch(0.36 0.10 292); }
+    .btn.ghost { color: var(--light); background: var(--panel-2); box-shadow: 0 6px 0 var(--line); }
+    .btn.small { min-height: 34px; padding: 5px 8px; font-size: 12px; border-width: 3px; box-shadow: 0 4px 0 var(--wood-dark); }
+    .btn.active { color: var(--light); background: var(--green); box-shadow: 0 6px 0 var(--green-dark); }
+
+    .home-top-card, .mode-card, .panel, .play-card, .paper-card {
+      border: 4px solid var(--line);
+      box-shadow: 10px 10px 0 var(--shadow);
+    }
+
+    .home-top-card {
+      position: relative;
+      min-width: 0;
+      margin-top: clamp(44px, 8vh, 92px);
+      margin-left: -56px;
+      padding: 24px 22px 22px;
+      color: oklch(0.17 0.035 54);
+      background:
+        radial-gradient(circle at 18px 18px, oklch(0.24 0.06 45) 0 5px, transparent 6px),
+        radial-gradient(circle at calc(100% - 18px) 18px, oklch(0.24 0.06 45) 0 5px, transparent 6px),
+        repeating-linear-gradient(0deg, rgba(84, 43, 13, .18) 0 10px, rgba(255, 234, 160, .07) 10px 20px),
+        linear-gradient(180deg, oklch(0.77 0.105 70), oklch(0.61 0.105 62));
+      border-color: oklch(0.23 0.07 48);
+      box-shadow:
+        10px 10px 0 rgba(69, 38, 13, .42),
+        inset 0 0 0 6px rgba(255, 230, 154, .13),
+        inset 0 -14px 0 rgba(78, 39, 11, .16);
+      transform: translate(-28px, 18px) rotate(.18deg);
+      animation: signDrop 520ms var(--ease-out-expo) both;
+    }
+
+    .home-top-card::before,
+    .home-top-card::after {
+      content: "";
+      position: absolute;
+      width: 22px;
+      height: 44px;
+      top: -28px;
+      background:
+        repeating-linear-gradient(0deg, rgba(67, 35, 11, .16) 0 7px, transparent 7px 14px),
+        oklch(0.43 0.085 58);
+      border: 4px solid oklch(0.22 0.06 45);
+      box-shadow: 4px 4px 0 rgba(65, 35, 12, .32);
+    }
+
+    .home-top-card::before { left: 42px; }
+    .home-top-card::after { right: 42px; }
+
+    .home-top-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 18px;
+      color: oklch(0.20 0.065 48);
+      text-shadow: 1px 1px 0 rgba(255, 235, 172, .48);
+    }
+
+    .length-select {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .mode-grid {
+      position: relative;
+      z-index: 3;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(18px, 2vw, 28px);
+      margin: calc(-1 * clamp(108px, 15vh, 156px)) 0 24px;
+      padding: 0 clamp(20px, 4vw, 72px);
+    }
+
+    .mode-grid.collapsed { display: grid; }
+    .mode-grid:not(.collapsed) .mode-card {
+      animation: cardDeal 420ms var(--ease-out-expo) both;
+      animation-delay: calc(var(--deal, 0) * 90ms);
+    }
+
+    .mode-card {
+      --mode-a: var(--green);
+      --mode-b: var(--gold);
+      --mode-deep: var(--green-dark);
+      position: relative;
+      min-height: 292px;
+      display: grid;
+      align-content: space-between;
+      gap: 12px;
+      padding: 22px 22px 20px;
+      overflow: hidden;
+      color: oklch(0.12 0.035 58);
+      background:
+        linear-gradient(90deg, transparent 0 14px, rgba(255,255,255,.12) 14px 18px, transparent 18px 100%) 0 0 / 36px 100%,
+        repeating-linear-gradient(0deg, rgba(78, 42, 14, .16) 0 9px, rgba(255, 241, 180, .10) 9px 18px),
+        linear-gradient(180deg, oklch(0.88 0.07 78), oklch(0.73 0.08 68));
+      border-color: oklch(0.21 0.06 48);
+      box-shadow:
+        12px 12px 0 rgba(60, 36, 16, .46),
+        inset 0 0 0 6px rgba(255, 243, 190, .14),
+        inset 0 -16px 0 rgba(72, 39, 13, .14);
+      transition: transform 180ms var(--ease-out-quart), box-shadow 180ms var(--ease-out-quart);
+      animation: cardPeek 520ms var(--ease-out-expo) both;
+      animation-delay: calc(var(--deal, 0) * 90ms + 120ms);
+    }
+
+    .mode-card:hover {
+      transform: translateY(-8px);
+      box-shadow:
+        12px 18px 0 rgba(60, 36, 16, .44),
+        inset 0 0 0 6px rgba(255, 243, 190, .16),
+        inset 0 -16px 0 rgba(72, 39, 13, .14);
+    }
+
+    .mode-card::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border: 4px solid rgba(39, 22, 9, .34);
+      pointer-events: none;
+    }
+
+    .mode-card::after {
+      content: "";
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 78px;
+      height: 78px;
+      background:
+        linear-gradient(var(--mode-a), var(--mode-a)) 12px 0 / 42px 12px no-repeat,
+        linear-gradient(var(--mode-b), var(--mode-b)) 0 12px / 66px 42px no-repeat,
+        linear-gradient(var(--mode-deep), var(--mode-deep)) 12px 54px / 42px 12px no-repeat,
+        linear-gradient(rgba(255,255,255,.32), rgba(255,255,255,.32)) 18px 18px / 18px 18px no-repeat;
+      border: 4px solid oklch(0.19 0.045 48);
+      box-shadow: 5px 5px 0 rgba(42, 23, 9, .34);
+      image-rendering: pixelated;
+      transform: rotate(4deg);
+    }
+
+    .mode-card:nth-child(1) {
+      --mode-a: oklch(0.63 0.16 142);
+      --mode-b: oklch(0.81 0.14 92);
+      --mode-deep: oklch(0.34 0.11 140);
+    }
+
+    .mode-card:nth-child(2) {
+      --mode-a: oklch(0.70 0.12 218);
+      --mode-b: oklch(0.73 0.19 32);
+      --mode-deep: oklch(0.38 0.10 218);
+    }
+
+    .mode-card:nth-child(3) {
+      --mode-a: oklch(0.62 0.16 292);
+      --mode-b: oklch(0.48 0.11 178);
+      --mode-deep: oklch(0.31 0.10 292);
+    }
+
+    .mode-kicker {
+      display: inline-flex;
+      width: fit-content;
+      min-height: 28px;
+      align-items: center;
+      padding: 4px 7px;
+      color: var(--light);
+      font-size: 12px;
+      text-transform: uppercase;
+      background: var(--mode-deep);
+      border: 3px solid oklch(0.18 0.04 48);
+      box-shadow: 3px 3px 0 rgba(44, 24, 10, .28);
+    }
+
+    .mode-card h2 {
+      margin: 8px 0 8px;
+      font-size: clamp(32px, 3vw, 44px);
+      line-height: 1;
+      color: oklch(0.20 0.065 48);
+      text-shadow: 2px 2px 0 oklch(0.89 0.08 82);
+    }
+
+    .mode-card p {
+      margin: 0;
+      min-height: 62px;
+      line-height: 1.5;
+      max-width: 84%;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 8px 10px;
+      background: rgba(255, 239, 177, .68);
+      border: 3px solid rgba(48, 27, 11, .42);
+      box-shadow: inset 0 -5px 0 rgba(77, 43, 14, .10);
+    }
+
+    .mode-meta {
+      display: grid;
+      gap: 6px;
+      margin: 9px 0;
+      font-size: 12px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 28px;
+      padding: 4px 7px;
+      color: var(--light);
+      background: var(--panel);
+      border: 3px solid var(--line);
+      box-shadow: 3px 3px 0 rgba(0,0,0,.24);
+    }
+
+    .rule-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 12px;
+      background: var(--panel);
+      border: 4px solid var(--line);
+      box-shadow: 8px 8px 0 var(--shadow);
+    }
+
+    .home-dashboard {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    .home-stat {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.20) 0 14px, transparent 14px),
+        rgba(255, 239, 177, .24);
+      border: 3px solid var(--line);
+      box-shadow: inset 0 -5px 0 rgba(75, 40, 12, .10);
+    }
+
+    .rule-strip div {
+      min-height: 62px;
+      padding: 10px;
+      background: var(--panel-2);
+      border: 3px solid var(--line);
+    }
+
+    .rule-strip span {
+      display: block;
+      color: var(--gold);
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+
+    .nav {
+      display: grid;
+      grid-template-columns: auto minmax(420px, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 10px;
+      background:
+        repeating-linear-gradient(0deg, rgba(76, 41, 14, .20) 0 10px, rgba(255, 237, 170, .08) 10px 20px),
+        rgba(105, 65, 27, .88);
+      border: 4px solid var(--line);
+      box-shadow: 8px 8px 0 rgba(36, 22, 10, .32);
+    }
+
+    .nav-title {
+      min-width: 0;
+      padding: 8px 14px;
+      background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 8px, transparent 8px 16px),
+        oklch(0.19 0.028 238);
+      border: 4px solid var(--line);
+      box-shadow: 6px 6px 0 rgba(0,0,0,.32);
+    }
+
+    .nav-title strong {
+      display: block;
+      color: var(--gold);
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .nav-title span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(78px, 1fr));
+      gap: 7px;
+    }
+
+    .hud-card {
+      padding: 7px 8px;
+      background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 8px, transparent 8px 16px),
+        oklch(0.19 0.028 238);
+      border: 4px solid var(--line);
+      box-shadow: 5px 5px 0 rgba(0,0,0,.30);
+    }
+
+    .hud-card span {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .hud-card strong {
+      display: block;
+      color: var(--gold);
+      font-size: 20px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .game-layout {
+      display: grid;
+      grid-template-columns: minmax(620px, .94fr) minmax(520px, 1.06fr);
+      gap: 18px;
+      align-items: stretch;
+      min-height: calc(100vh - 150px);
+      padding: 14px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.08) 0 2px, transparent 2px 100%) 0 0 / 32px 32px,
+        linear-gradient(180deg, rgba(44, 84, 38, .82), rgba(29, 63, 35, .88));
+      border: 5px solid var(--line);
+      box-shadow:
+        12px 14px 0 rgba(20, 25, 14, .34),
+        inset 0 0 0 6px rgba(150, 210, 92, .14);
+    }
+
+    .panel {
+      background:
+        repeating-linear-gradient(0deg, rgba(255, 240, 178, .09) 0 10px, rgba(82, 42, 14, .12) 10px 20px),
+        linear-gradient(180deg, oklch(0.70 0.09 70), oklch(0.56 0.085 62));
+      color: oklch(0.16 0.035 54);
+      border-color: oklch(0.21 0.06 48);
+      box-shadow:
+        9px 9px 0 rgba(58, 34, 12, .36),
+        inset 0 0 0 6px rgba(255, 238, 177, .12);
+    }
+
+    .panel.pad { padding: 14px 16px; }
+
+    .play-card {
+      display: grid;
+      grid-template-rows: auto auto auto auto 1fr;
+      align-content: start;
+      min-height: 100%;
+      padding: 18px 20px;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.16) 0 8px, transparent 8px 16px) 0 0 / 16px 16px,
+        linear-gradient(180deg, oklch(0.91 0.065 82), oklch(0.82 0.07 78));
+      box-shadow:
+        9px 9px 0 rgba(58, 34, 12, .36),
+        inset 0 0 0 6px rgba(255,255,255,.16);
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-head h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 4px 9px;
+      color: var(--light);
+      font-size: 12px;
+      background: var(--green-dark);
+      border: 3px solid var(--line);
+      box-shadow: 3px 3px 0 rgba(0,0,0,.22);
+      white-space: nowrap;
+    }
+
+    .digits {
+      display: grid;
+      gap: 7px;
+      margin: 10px 0 12px;
+    }
+
+    .digit-cell {
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      color: var(--light);
+      font-size: clamp(38px, 5vw, 64px);
+      line-height: 1;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.18) 0 18%, transparent 18%),
+        oklch(0.18 0.018 248);
+      border: 4px solid var(--line);
+      box-shadow: inset 6px 6px 0 rgba(255,255,255,.06), inset -6px -6px 0 rgba(0,0,0,.34);
+      transition: transform 140ms var(--ease-out-quart), outline-color 140ms var(--ease-out-quart);
+    }
+
+    .digit-cell.active {
+      outline: 4px solid var(--focus);
+      outline-offset: 2px;
+      animation: activeSlot 1300ms var(--ease-out-quart) infinite;
+    }
+
+    .status {
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      padding: 9px 12px;
+      margin: 10px 0 14px;
+      color: var(--light);
+      line-height: 1.5;
+      background: oklch(0.24 0.035 52);
+      border: 4px solid var(--line);
+      box-shadow: inset 0 -8px 0 rgba(0,0,0,.18);
+      transition: background-color 180ms var(--ease-out-quart), color 180ms var(--ease-out-quart), transform 180ms var(--ease-out-quart);
+    }
+
+    .status.win { color: var(--ink); background: var(--gold); animation: statusPulse 420ms var(--ease-out-quint) both; }
+    .status.error { background: var(--red); animation: statusShake 260ms var(--ease-out-quart) both; }
+
+    .keypad, .feedback-grid, .action-row, .pk-secrets, .pk-board, .settings-grid, .advisor-tabs, .settlement-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .keypad { grid-template-columns: repeat(5, 1fr); }
+    .feedback-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .action-row { grid-template-columns: 1.2fr .8fr .8fr; }
+    .pk-secrets { grid-template-columns: repeat(2, 1fr); }
+    .pk-board { grid-template-columns: repeat(2, 1fr); }
+    .settings-grid { grid-template-columns: repeat(2, 1fr); margin-top: 10px; }
+    .advisor-tabs { grid-template-columns: repeat(2, 1fr); margin: 0 0 10px; }
+    .settlement-grid { grid-template-columns: repeat(2, 1fr); }
+
+    .play-tips {
+      align-self: end;
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 3px solid rgba(44, 28, 12, .28);
+    }
+
+    .tip-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: start;
+      padding: 8px;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.14) 0 12px, transparent 12px),
+        oklch(0.78 0.07 78);
+      border: 3px solid var(--line);
+      box-shadow: inset 0 -5px 0 rgba(72, 39, 13, .10);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .tip-row strong {
+      display: inline-grid;
+      place-items: center;
+      min-width: 34px;
+      min-height: 28px;
+      color: var(--light);
+      background: var(--wood-dark);
+      border: 3px solid var(--line);
+      font-size: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field label {
+      color: oklch(0.35 0.035 78);
+      font-size: 11px;
+    }
+
+    .field input, .field select {
+      width: 100%;
+      min-height: 38px;
+      padding: 6px 8px;
+      color: var(--light);
+      background: oklch(0.18 0.018 248);
+      border: 3px solid var(--line);
+      border-radius: 0;
+    }
+
+    details.paper-card {
+      padding: 0;
+      overflow: hidden;
+      color: var(--ink);
+      background: var(--card);
+    }
+
+    details summary {
+      cursor: pointer;
+      padding: 12px;
+      list-style: none;
+      font-weight: 700;
+    }
+
+    details summary::-webkit-details-marker { display: none; }
+    .details-body { padding: 0 12px 12px; }
+    .details-body p { margin: 0 0 10px; font-size: 12px; line-height: 1.6; }
+
+    .model-status, .coach-box, .secret-box, .settlement-card {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      padding: 7px 9px;
+      margin-top: 10px;
+      color: var(--light);
+      font-size: 12px;
+      line-height: 1.45;
+      background: var(--panel-2);
+      border: 3px solid var(--line);
+      box-shadow: inset 0 -5px 0 rgba(0,0,0,.18);
+    }
+
+    .model-status.ok { color: var(--ink); background: var(--gold); }
+    .model-status.error { background: var(--red); }
+    .model-tools { margin-top: 8px; }
+
+    .coach-box {
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.14) 0 14px, transparent 14px),
+        oklch(0.79 0.07 78);
+    }
+
+    .ai-trace {
+      display: grid;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 8px;
+      color: var(--ink);
+      background: var(--card);
+      border: 3px solid var(--line);
+      box-shadow: inset 0 -6px 0 rgba(0,0,0,.12);
+    }
+
+    .ai-trace strong {
+      font-size: 14px;
+    }
+
+    .trace-step {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 7px;
+      align-items: start;
+      padding: 6px;
+      background: var(--card-2);
+      border: 3px solid var(--line);
+      font-size: 12px;
+      line-height: 1.45;
+      animation: historyIn 220ms var(--ease-out-quart) both;
+    }
+
+    .trace-step span {
+      display: inline-grid;
+      place-items: center;
+      min-width: 26px;
+      min-height: 26px;
+      color: var(--light);
+      background: var(--green-dark);
+      border: 3px solid var(--line);
+    }
+
+    .trace-step.pending span { background: var(--panel-2); }
+    .trace-step.error span { background: var(--red); }
+    .trace-step.done span { background: var(--green-dark); }
+    .trace-step.pending span { animation: traceBlink 1000ms steps(2, end) infinite; }
+
+    .secret-box, .settlement-card {
+      display: grid;
+      color: var(--ink);
+      background: var(--card);
+    }
+
+    .secret-value {
+      margin: 8px 0;
+      font-size: clamp(34px, 8vw, 62px);
+      line-height: 1;
+      letter-spacing: .08em;
+      color: var(--line);
+      word-break: break-all;
+    }
+
+    .settlement-card h3, .secret-box h3 {
+      margin: 0 0 6px;
+      font-size: 20px;
+    }
+
+    .side-stack {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 14px;
+      min-height: 100%;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .metric {
+      min-height: 58px;
+      padding: 9px 10px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12) 0 12px, transparent 12px),
+        rgba(255, 234, 164, .20);
+      border: 3px solid var(--line);
+      box-shadow: inset 0 -6px 0 rgba(72, 39, 13, .12);
+    }
+
+    .metric span {
+      display: block;
+      margin-bottom: 7px;
+      color: oklch(0.34 0.045 62);
+      font-size: 11px;
+    }
+
+    .metric strong {
+      display: block;
+      color: oklch(0.23 0.07 48);
+      font-size: 20px;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .history-list {
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      max-height: none;
+      min-height: 260px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .side-stack .panel:last-child {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 0;
+    }
+
+    .history-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 9px;
+      color: var(--ink);
+      background: var(--card-2);
+      border: 3px solid var(--line);
+      animation: historyIn 220ms var(--ease-out-quart) both;
+    }
+
+    .history-card.conflict {
+      outline: 4px solid var(--red);
+      outline-offset: 2px;
+    }
+
+    .round, .hit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      padding: 4px 7px;
+      border: 3px solid var(--line);
+    }
+
+    .round { color: var(--ink); background: var(--gold); }
+    .hit { color: var(--light); background: var(--red); }
+    .history-main { font-size: 18px; }
+    .history-sub { grid-column: 1 / -1; color: oklch(0.34 0.03 78); font-size: 12px; }
+
+    .empty {
+      min-height: 150px;
+      display: grid;
+      gap: 8px;
+      padding: 18px;
+      color: oklch(0.28 0.035 74);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.15) 0 14px, transparent 14px),
+        rgba(255, 239, 177, .34);
+      border: 3px dashed oklch(0.27 0.055 55);
+    }
+
+    .empty.center { place-items: center; text-align: center; }
+
+    .empty-panel {
+      min-height: 100%;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .empty-panel h3 {
+      margin: 0;
+      color: oklch(0.21 0.06 52);
+      font-size: 18px;
+    }
+
+    .empty-panel p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .empty-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .mini-tile {
+      min-height: 76px;
+      padding: 9px;
+      color: var(--ink);
+      background: var(--card);
+      border: 3px solid var(--line);
+      box-shadow: inset 0 -5px 0 rgba(72, 39, 13, .10);
+    }
+
+    .mini-tile span {
+      display: block;
+      margin-bottom: 7px;
+      color: oklch(0.35 0.045 62);
+      font-size: 11px;
+    }
+
+    .mini-tile strong {
+      display: block;
+      color: oklch(0.21 0.06 52);
+      font-size: 18px;
+      line-height: 1.15;
+      word-break: break-word;
+    }
+
+    .candidate-list, .badge-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .candidate-chip, .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 7px;
+      border: 3px solid var(--line);
+      box-shadow: 3px 3px 0 rgba(0,0,0,.18);
+    }
+
+    .candidate-chip { color: var(--ink); background: var(--card); font-size: 12px; }
+    .badge { color: var(--light); background: var(--green-dark); font-size: 11px; }
+
+    .pk-player-card {
+      padding: 12px;
+      color: var(--ink);
+      background: var(--card);
+      border: 4px solid var(--line);
+      box-shadow: 6px 6px 0 var(--shadow);
+    }
+
+    .pk-player-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .tutorial-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(7, 9, 16, .74);
+      animation: fadeIn 180ms var(--ease-out-quart) both;
+    }
+
+    .tutorial-card {
+      width: min(720px, 100%);
+      padding: 18px;
+      color: var(--ink);
+      background: var(--card);
+      border: 4px solid var(--line);
+      box-shadow: 14px 14px 0 var(--shadow);
+      animation: modalIn 260ms var(--ease-out-expo) both;
+    }
+
+    .tutorial-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .tutorial-step {
+      min-height: 120px;
+      padding: 12px;
+      background: var(--card-2);
+      border: 3px solid var(--line);
+    }
+
+    .tutorial-step strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+
+    @media (max-width: 980px) {
+      .hero, .nav, .game-layout {
+        grid-template-columns: 1fr;
+      }
+      .hero {
+        min-height: auto;
+        padding-top: 20px;
+      }
+      .hero-copy {
+        width: 100%;
+      }
+      .hud {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .mode-grid {
+        grid-template-columns: 1fr;
+        margin-top: 18px;
+      }
+      .game-layout {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 580px) {
+      .app {
+        width: min(100% - 16px, 520px);
+        padding-top: 28px;
+      }
+      body {
+        background:
+          url("assets/block-world-bg-v2.png?v=4") 42% top / auto 100vh no-repeat fixed,
+          linear-gradient(180deg, var(--bg-2), var(--bg));
+      }
+      .home-top-card { min-width: 0; }
+      .rule-strip, .hud, .metrics, .length-select, .settings-grid, .pk-secrets, .pk-board, .action-row {
+        grid-template-columns: 1fr;
+      }
+      .empty-grid {
+        grid-template-columns: 1fr;
+      }
+      h1 { font-size: clamp(52px, 18vw, 78px); }
+      .hero { min-height: auto; padding-inline: 0; }
+      .hero-copy { padding: 14px; }
+      .sigil-row { justify-content: center; }
+      .sigil-card { width: clamp(50px, 16vw, 72px); }
+      .home-actions .btn {
+        min-height: 50px;
+        font-size: 16px;
+      }
+      .mode-grid { padding: 0; }
+      .mode-card {
+        min-height: 220px;
+        padding: 16px;
+      }
+      .mode-card h2 { font-size: 34px; }
+      .mode-card p { min-height: auto; font-size: 14px; }
+      .tutorial-steps, .settlement-grid, .advisor-tabs {
+        grid-template-columns: 1fr;
+      }
+      .keypad {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+      .feedback-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .game-layout {
+        padding: 8px;
+        border-width: 4px;
+      }
+      .btn {
+        min-height: 44px;
+        padding: 7px 6px;
+        border-width: 3px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    @keyframes screenRise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes cardDeal {
+      from { opacity: 0; transform: translateY(18px) rotate(-1deg); }
+      to { opacity: 1; transform: translateY(0) rotate(0); }
+    }
+
+    @keyframes signDrop {
+      from { opacity: 0; transform: translateY(-14px) rotate(.18deg); }
+      to { opacity: 1; transform: translateY(0) rotate(.18deg); }
+    }
+
+    @keyframes cardPeek {
+      from { opacity: 0; transform: translateY(34px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes sigilFloat {
+      0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+      50% { transform: translateY(-7px) rotate(calc(var(--tilt, 0deg) + 2deg)); }
+    }
+
+    @keyframes statusPulse {
+      0% { transform: scale(.985); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes statusShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    @keyframes activeSlot {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    @keyframes historyIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes traceBlink {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.45); }
+    }
+
+    @keyframes blockBob {
+      0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+      50% { transform: translate3d(0, -16px, 0) rotate(2deg); }
+    }
+
+    @keyframes cloudDrift {
+      from { transform: translate3d(-18vw, 0, 0); }
+      to { transform: translate3d(112vw, 0, 0); }
+    }
+
+    @keyframes sparkRise {
+      0% { opacity: 0; transform: translate3d(0, 12px, 0) scale(.8); }
+      20% { opacity: .85; }
+      100% { opacity: 0; transform: translate3d(8px, -42px, 0) scale(.2); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(16px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+</style>
+</head>
+<body>
+  <div class="minecraft-sky" aria-hidden="true">
+    <span class="float-cloud" style="--x:-8%;--y:9%;--w:170px;--dur:36000ms;--delay:-9000ms"></span>
+    <span class="float-cloud" style="--x:24%;--y:18%;--w:120px;--dur:30000ms;--delay:-16000ms"></span>
+    <span class="float-block" style="--x:8%;--y:72%;--size:34px;--dur:6800ms;--delay:-1400ms"></span>
+    <span class="float-block stone" style="--x:54%;--y:21%;--size:28px;--dur:7600ms;--delay:-3200ms"></span>
+    <span class="float-block" style="--x:70%;--y:12%;--size:46px;--dur:8200ms;--delay:-4800ms"></span>
+    <span class="torch-spark" style="--x:85%;--y:58%;--dur:2200ms;--delay:-300ms"></span>
+    <span class="torch-spark" style="--x:93%;--y:53%;--dur:2600ms;--delay:-1400ms"></span>
+    <span class="torch-spark" style="--x:58%;--y:57%;--dur:2400ms;--delay:-900ms"></span>
+  </div>
+  <main class="app">
+    <section class="screen active" id="homeScreen">
+      <header class="hero">
+        <div class="hero-copy">
+          <span class="brand-kicker">AI 数字推演对决</span>
+          <h1>弈数天机</h1>
+          <p class="subtitle">藏一串数字，推一局天机。</p>
+          <div class="sigil-row" aria-hidden="true">
+            <span class="sigil-card" style="--tilt:-8deg;--delay:0">0</span>
+            <span class="sigil-card" style="--tilt:4deg;--delay:1">7</span>
+            <span class="sigil-card" style="--tilt:-2deg;--delay:2">3</span>
+            <span class="sigil-card" style="--tilt:7deg;--delay:3">9</span>
+            <span class="sigil-card" style="--tilt:-5deg;--delay:4">1</span>
+          </div>
+          <div class="home-actions">
+            <button class="btn primary" id="enterGameBtn" type="button">入局</button>
+            <button class="btn ghost" id="rulesBtn" type="button">规则</button>
+            <button class="btn ghost" id="tutorialBtn" type="button">新手演示</button>
+          </div>
+        </div>
+        <div class="home-top-card">
+          <strong>今日战绩</strong>
+          <div class="home-dashboard">
+            <div class="home-stat"><span>最佳</span><b id="homeBest">暂无</b></div>
+            <div class="home-stat"><span>成就</span><b id="homeAchievementCount">0枚</b></div>
+            <div class="home-stat"><span>今日天机</span><b id="homeDaily">待入局</b></div>
+          </div>
+          <button class="btn small blue" id="dailyChallengeBtn" type="button" style="margin-top:10px;width:100%">今日天机</button>
+          <strong style="margin-top:12px">本局规则</strong>
+          <span id="homeRule">5位，数字可重复，可 0 开头</span>
+          <div class="length-select" role="group" aria-label="首页位数选择">
+            <button class="btn small" data-home-length="4" type="button">4位</button>
+            <button class="btn small active" data-home-length="5" type="button">5位</button>
+            <button class="btn small" data-home-length="6" type="button">6位</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="mode-grid collapsed" id="modeGrid">
+        <article class="mode-card" style="--deal:0">
+          <div>
+            <span class="mode-kicker">Solo Training</span>
+            <h2>演武场</h2>
+            <p>网页藏一个答案，你自己猜。适合热手、练开局和找节奏。</p>
+            <div class="mode-meta">
+              <span class="chip">自动反馈</span>
+              <span class="chip">记录轮数</span>
+              <span class="chip">难度：中</span>
+            </div>
+          </div>
+          <button class="btn primary" data-start-mode="practice" type="button">进入演武场</button>
+        </article>
+
+        <article class="mode-card" style="--deal:1">
+          <div>
+            <span class="mode-kicker">AI Advisor</span>
+            <h2>军师营</h2>
+            <p>你和别人真人对局时用。AI 给你下一猜，你把对手反馈填回来。</p>
+            <div class="mode-meta">
+              <span class="chip">外部 API / 本地兜底</span>
+              <span class="chip">冲突检测</span>
+              <span class="chip">难度：高</span>
+            </div>
+          </div>
+          <button class="btn blue" data-start-mode="advisor" type="button">进入军师营</button>
+        </article>
+
+        <article class="mode-card" style="--deal:2">
+          <div>
+            <span class="mode-kicker">Local Duel</span>
+            <h2>对弈场</h2>
+            <p>同屏双人 PK。双方先输入秘密数字，再轮流进攻，页面自动结算反馈。</p>
+            <div class="mode-meta">
+              <span class="chip">双人本地</span>
+              <span class="chip">回合制</span>
+              <span class="chip">难度：看对手</span>
+            </div>
+          </div>
+          <button class="btn purple" data-start-mode="pk" type="button">进入对弈场</button>
+        </article>
+      </div>
+
+      <div class="rule-strip hidden" id="ruleStrip">
+        <div><span>反馈</span>只计算数字和位置都正确的个数。</div>
+        <div><span>数字</span>0-9 可重复，00000 也合法。</div>
+        <div><span>位数</span>4/5/6 位可选，切换后重开。</div>
+      </div>
+    </section>
+
+    <section class="screen" id="gameScreen">
+      <nav class="nav">
+        <button class="btn ghost" id="homeBtn" type="button">返回首页</button>
+        <div class="nav-title">
+          <strong id="gameTitle">演武场</strong>
+          <span id="gameSubtitle">网页藏答案，你来破局。</span>
+        </div>
+        <div class="hud" aria-live="polite">
+          <div class="hud-card"><span>位数</span><strong id="hudLength">5</strong></div>
+          <div class="hud-card"><span>轮数</span><strong id="hudRounds">0</strong></div>
+          <div class="hud-card"><span>候选</span><strong id="hudCandidates">-</strong></div>
+          <div class="hud-card"><span>用时</span><strong id="hudTime">00:00</strong></div>
+        </div>
+      </nav>
+
+      <div class="game-layout">
+        <section class="play-card">
+          <div class="card-head">
+            <h2 id="actionTitle">当前行动卡</h2>
+            <span class="tag" id="actionTag">练习</span>
+          </div>
+          <div class="digits" id="digitBoard"></div>
+          <div class="status" id="status" role="status">准备开始。</div>
+
+          <div id="practicePanel">
+            <div class="keypad" id="keypad"></div>
+            <div class="action-row" style="margin-top:8px">
+              <button class="btn primary" id="submitPracticeBtn" type="button">提交猜测</button>
+              <button class="btn" id="backBtn" type="button">退格</button>
+              <button class="btn red" id="clearBtn" type="button">清空</button>
+            </div>
+          </div>
+
+          <div id="settlementPanel" class="settlement-card hidden">
+            <h3>弈数天机</h3>
+            <p id="settlementText">本局尚未结算。</p>
+            <div class="settlement-grid">
+              <button class="btn small blue" id="copyShareBtn" type="button">复制战报</button>
+              <button class="btn small" id="newRoundBtn" type="button">再开一局</button>
+            </div>
+          </div>
+
+          <div id="advisorPanel" class="hidden">
+            <div class="advisor-tabs" role="group" aria-label="军师营模式">
+              <button class="btn small active" id="advisorGuessTab" type="button">我来猜</button>
+              <button class="btn small" id="advisorHostTab" type="button">我要出题</button>
+            </div>
+            <div id="advisorGuessPanel">
+              <p class="subtitle">把行动卡上的数字告诉对手，然后选择对方反馈的命中数。</p>
+              <div class="feedback-grid" id="feedbackGrid"></div>
+              <div class="action-row" style="margin-top:8px">
+                <button class="btn primary" id="askAiBtn" type="button">AI推演</button>
+                <button class="btn" id="localGuessBtn" type="button">本地出牌</button>
+                <button class="btn red" id="undoAdvisorBtn" type="button">撤销</button>
+              </div>
+              <div class="settings-grid" style="margin-top:10px">
+                <div class="field">
+                  <label for="manualGuessInput">中途接管：上一猜</label>
+                  <input id="manualGuessInput" inputmode="numeric" autocomplete="off" placeholder="例如 01234">
+                </div>
+                <div class="field">
+                  <label for="manualHitsInput">反馈命中数</label>
+                  <input id="manualHitsInput" inputmode="numeric" autocomplete="off" placeholder="0-5">
+                </div>
+              </div>
+              <div class="model-tools">
+                <button class="btn small blue" id="addManualHistoryBtn" type="button">补录战报</button>
+                <button class="btn small" id="editLastFeedbackBtn" type="button">编辑上一轮反馈</button>
+              </div>
+              <div class="ai-trace" id="aiTrace">
+                <strong>外部模型推演过程</strong>
+                <div id="aiTraceSteps">
+                  <div class="trace-step pending"><span>待</span><div>保存 API Key 后，点击 AI 推演会展示真实请求进度。</div></div>
+                </div>
+              </div>
+              <div class="coach-box" id="conflictCoach">反馈冲突时，军师会指出最该核对的一轮。</div>
+            </div>
+            <div id="advisorHostPanel" class="hidden">
+              <div class="secret-box">
+                <h3>难题答案</h3>
+                <p>给对方猜的答案。对完美算法不算作弊，但对真人更容易误判。</p>
+                <div class="secret-value" id="hardSecretValue">•••••</div>
+                <div class="badge-list" id="hardSecretTags"></div>
+                <div class="model-tools">
+                  <button class="btn small primary" id="generateHardSecretBtn" type="button">生成难题</button>
+                  <button class="btn small" id="toggleSecretBtn" type="button">显示答案</button>
+                  <button class="btn small blue" id="copySecretBtn" type="button">复制答案</button>
+                </div>
+              </div>
+            </div>
+            <details class="paper-card" id="apiDetails" style="margin-top:12px">
+              <summary>军师模型设置</summary>
+              <div class="details-body">
+                <p>Key 只保存在当前浏览器会话，不写入源码。AI推演只代表真实外部模型请求；本地出牌是独立兜底。</p>
+                <div class="settings-grid">
+                  <div class="field">
+                    <label for="apiKeyInput">API Key</label>
+                    <input id="apiKeyInput" type="password" autocomplete="off" placeholder="sk-...">
+                  </div>
+                  <div class="field">
+                    <label for="apiUrlInput">Base URL</label>
+                    <input id="apiUrlInput" type="url" value="https://maoapi.org/v1/chat/completions">
+                  </div>
+                  <div class="field">
+                    <label for="modelSelect">军师模型</label>
+                    <select id="modelSelect">
+                      <option value="auto">自动推荐</option>
+                    </select>
+                  </div>
+                  <div class="field" id="customModelField">
+                    <label for="customModelInput">自定义模型</label>
+                    <input id="customModelInput" type="text" placeholder="输入模型名">
+                  </div>
+                </div>
+                <div class="model-status" id="modelStatus">未设置 API Key 时使用本地军师；保存 Key 后会自动拉取模型。</div>
+                <div class="model-tools">
+                  <button class="btn small blue" id="saveApiBtn" type="button">保存并自动拉取</button>
+                  <button class="btn small" id="refreshModelsBtn" type="button">刷新模型列表</button>
+                  <button class="btn small primary" id="testModelBtn" type="button">测试模型</button>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <div id="pkSetupPanel" class="hidden">
+            <div class="pk-secrets">
+              <div class="pk-player-card">
+                <h3>玩家 A 秘密数字</h3>
+                <div class="field">
+                  <label for="secretA">输入后会隐藏显示</label>
+                  <input id="secretA" type="password" inputmode="numeric" autocomplete="off">
+                </div>
+              </div>
+              <div class="pk-player-card">
+                <h3>玩家 B 秘密数字</h3>
+                <div class="field">
+                  <label for="secretB">输入后会隐藏显示</label>
+                  <input id="secretB" type="password" inputmode="numeric" autocomplete="off">
+                </div>
+              </div>
+            </div>
+            <button class="btn primary" id="startPkBtn" type="button" style="margin-top:10px">开始 PK</button>
+          </div>
+
+          <div id="pkBattlePanel" class="hidden">
+            <p class="subtitle" id="pkTurnText">玩家 A 进攻，猜玩家 B 的数字。</p>
+            <div class="keypad" id="pkKeypad"></div>
+            <div class="action-row" style="margin-top:8px">
+              <button class="btn primary" id="submitPkBtn" type="button">提交进攻</button>
+              <button class="btn" id="pkBackBtn" type="button">退格</button>
+              <button class="btn red" id="pkClearBtn" type="button">清空</button>
+            </div>
+          </div>
+
+          <div class="play-tips" id="playTips" aria-live="polite"></div>
+        </section>
+
+        <aside class="side-stack">
+          <section class="panel pad">
+            <div class="card-head">
+              <h2>局势牌</h2>
+              <span class="tag" id="rankTag">新局</span>
+            </div>
+            <div class="metrics">
+              <div class="metric"><span>淘汰率</span><strong id="metricEliminate">0%</strong></div>
+              <div class="metric"><span>最佳</span><strong id="metricBest">暂无</strong></div>
+              <div class="metric"><span>状态</span><strong id="metricState">待命</strong></div>
+              <div class="metric"><span>AI</span><strong id="metricAi">关闭</strong></div>
+            </div>
+            <div class="badge-list" id="badgeList"></div>
+            <div class="candidate-list" id="candidateList"></div>
+          </section>
+
+          <section class="panel pad">
+            <div class="card-head">
+              <h2 id="historyTitle">战报牌堆</h2>
+              <span class="tag" id="historyTag">0轮</span>
+            </div>
+            <div class="history-list" id="historyList"></div>
+          </section>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <div class="tutorial-overlay hidden" id="tutorialOverlay" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
+    <div class="tutorial-card">
+      <h2 id="tutorialTitle">三步入局</h2>
+      <div class="tutorial-steps">
+        <div class="tutorial-step"><strong>1. 猜一串数</strong>每局是 4/5/6 位数字，0-9 可重复，也可以 0 开头。</div>
+        <div class="tutorial-step"><strong>2. 只看正位</strong>反馈只算数字和位置都正确的个数，不看错位存在。</div>
+        <div class="tutorial-step"><strong>3. 缩小天机</strong>每次反馈都会排除候选，越少轮破局越强。</div>
+      </div>
+      <div class="home-tools">
+        <button class="btn primary" id="closeTutorialBtn" type="button">知道了</button>
+        <button class="btn" id="openRulesFromTutorialBtn" type="button">查看规则</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DIGITS = "0123456789";
+    const RECORD_KEY = "number-card-arena-records-v3";
+    const API_KEY = "number-card-arena-api-v1";
+    const FIRST_RUN_KEY = "yishu-tianji-first-run-v1";
+    const ACHIEVEMENT_KEY = "yishu-tianji-achievements-v1";
+    const DEFAULT_API_URL = "https://maoapi.org/v1/chat/completions";
+    const ACHIEVEMENTS = {
+      firstWin: "首破天机",
+      fastWin: "五轮破局",
+      sixWin: "六位破局",
+      advisorClean: "零误军师",
+      pkWin: "对弈首胜"
+    };
+    const FALLBACK_MODELS = [
+      { id: "gpt-5.5", label: "gpt-5.5", provider: "OpenAI / ChatGPT" },
+      { id: "gpt-5.5-pro", label: "gpt-5.5-pro", provider: "OpenAI / ChatGPT" },
+      { id: "gpt-5.4", label: "gpt-5.4", provider: "OpenAI / ChatGPT" },
+      { id: "gpt-5.4-pro", label: "gpt-5.4-pro", provider: "OpenAI / ChatGPT" },
+      { id: "gpt-5.4-mini", label: "gpt-5.4-mini", provider: "OpenAI / ChatGPT" },
+      { id: "gpt-5.4-nano", label: "gpt-5.4-nano", provider: "OpenAI / ChatGPT" },
+      { id: "chat-latest", label: "chat-latest", provider: "OpenAI / ChatGPT" },
+      { id: "claude-opus-4-8", label: "claude-opus-4-8", provider: "Claude" },
+      { id: "claude-sonnet-4-6", label: "claude-sonnet-4-6", provider: "Claude" },
+      { id: "claude-haiku-4-5", label: "claude-haiku-4-5", provider: "Claude" },
+      { id: "claude-haiku-4-5-20251001", label: "claude-haiku-4-5-20251001", provider: "Claude" },
+      { id: "deepseek-v4-pro", label: "deepseek-v4-pro", provider: "DeepSeek" },
+      { id: "deepseek-v4-flash", label: "deepseek-v4-flash", provider: "DeepSeek" },
+      { id: "deepseek-chat", label: "deepseek-chat（即将弃用）", provider: "DeepSeek" },
+      { id: "deepseek-reasoner", label: "deepseek-reasoner（即将弃用）", provider: "DeepSeek" }
+    ];
+    const MODEL_PRIORITY = [
+      "gpt-5.5", "claude-opus-4-8", "deepseek-v4-pro",
+      "gpt-5.4", "claude-sonnet-4-6", "deepseek-v4-flash",
+      "gpt-5.4-mini", "gpt-5.4-nano", "claude-haiku-4-5"
+    ];
+
+    const state = {
+      screen: "home",
+      mode: "practice",
+      length: 5,
+      answer: "",
+      input: "",
+      currentGuess: "",
+      candidates: [],
+      history: [],
+      startedAt: 0,
+      elapsed: 0,
+      solved: false,
+      thinking: false,
+      firstRunSeen: localStorage.getItem(FIRST_RUN_KEY) === "yes",
+      advisorRole: "guess",
+      hardSecret: { value: "", visible: false, tags: [], score: 0 },
+      conflictIndex: -1,
+      lastResult: null,
+      aiTrace: [
+        { state: "pending", mark: "待", text: "保存 API Key 后，点击 AI 推演会展示真实请求进度。" }
+      ],
+      achievements: loadAchievements(),
+      dailyChallenge: "",
+      api: loadApi(),
+      modelDiscovery: {
+        status: "idle",
+        models: [],
+        message: "未设置 API Key 时使用本地军师；保存 Key 后会自动拉取模型。"
+      },
+      records: loadRecords(),
+      pk: {
+        phase: "setup",
+        secretA: "",
+        secretB: "",
+        input: "",
+        turn: "A",
+        round: 1,
+        pendingAWin: false,
+        attacksA: [],
+        attacksB: [],
+        winner: ""
+      }
+    };
+
+    const els = {
+      homeScreen: document.getElementById("homeScreen"),
+      gameScreen: document.getElementById("gameScreen"),
+      modeGrid: document.getElementById("modeGrid"),
+      ruleStrip: document.getElementById("ruleStrip"),
+      enterGameBtn: document.getElementById("enterGameBtn"),
+      rulesBtn: document.getElementById("rulesBtn"),
+      tutorialBtn: document.getElementById("tutorialBtn"),
+      dailyChallengeBtn: document.getElementById("dailyChallengeBtn"),
+      homeBest: document.getElementById("homeBest"),
+      homeAchievementCount: document.getElementById("homeAchievementCount"),
+      homeDaily: document.getElementById("homeDaily"),
+      homeRule: document.getElementById("homeRule"),
+      homeBtn: document.getElementById("homeBtn"),
+      gameTitle: document.getElementById("gameTitle"),
+      gameSubtitle: document.getElementById("gameSubtitle"),
+      hudLength: document.getElementById("hudLength"),
+      hudRounds: document.getElementById("hudRounds"),
+      hudCandidates: document.getElementById("hudCandidates"),
+      hudTime: document.getElementById("hudTime"),
+      actionTitle: document.getElementById("actionTitle"),
+      actionTag: document.getElementById("actionTag"),
+      digitBoard: document.getElementById("digitBoard"),
+      status: document.getElementById("status"),
+      practicePanel: document.getElementById("practicePanel"),
+      advisorPanel: document.getElementById("advisorPanel"),
+      pkSetupPanel: document.getElementById("pkSetupPanel"),
+      pkBattlePanel: document.getElementById("pkBattlePanel"),
+      keypad: document.getElementById("keypad"),
+      pkKeypad: document.getElementById("pkKeypad"),
+      feedbackGrid: document.getElementById("feedbackGrid"),
+      submitPracticeBtn: document.getElementById("submitPracticeBtn"),
+      backBtn: document.getElementById("backBtn"),
+      clearBtn: document.getElementById("clearBtn"),
+      settlementPanel: document.getElementById("settlementPanel"),
+      settlementText: document.getElementById("settlementText"),
+      copyShareBtn: document.getElementById("copyShareBtn"),
+      newRoundBtn: document.getElementById("newRoundBtn"),
+      advisorGuessTab: document.getElementById("advisorGuessTab"),
+      advisorHostTab: document.getElementById("advisorHostTab"),
+      advisorGuessPanel: document.getElementById("advisorGuessPanel"),
+      advisorHostPanel: document.getElementById("advisorHostPanel"),
+      manualGuessInput: document.getElementById("manualGuessInput"),
+      manualHitsInput: document.getElementById("manualHitsInput"),
+      addManualHistoryBtn: document.getElementById("addManualHistoryBtn"),
+      editLastFeedbackBtn: document.getElementById("editLastFeedbackBtn"),
+      conflictCoach: document.getElementById("conflictCoach"),
+      hardSecretValue: document.getElementById("hardSecretValue"),
+      hardSecretTags: document.getElementById("hardSecretTags"),
+      generateHardSecretBtn: document.getElementById("generateHardSecretBtn"),
+      toggleSecretBtn: document.getElementById("toggleSecretBtn"),
+      copySecretBtn: document.getElementById("copySecretBtn"),
+      aiTraceSteps: document.getElementById("aiTraceSteps"),
+      askAiBtn: document.getElementById("askAiBtn"),
+      localGuessBtn: document.getElementById("localGuessBtn"),
+      undoAdvisorBtn: document.getElementById("undoAdvisorBtn"),
+      apiKeyInput: document.getElementById("apiKeyInput"),
+      apiUrlInput: document.getElementById("apiUrlInput"),
+      modelSelect: document.getElementById("modelSelect"),
+      customModelField: document.getElementById("customModelField"),
+      customModelInput: document.getElementById("customModelInput"),
+      modelStatus: document.getElementById("modelStatus"),
+      saveApiBtn: document.getElementById("saveApiBtn"),
+      refreshModelsBtn: document.getElementById("refreshModelsBtn"),
+      testModelBtn: document.getElementById("testModelBtn"),
+      secretA: document.getElementById("secretA"),
+      secretB: document.getElementById("secretB"),
+      startPkBtn: document.getElementById("startPkBtn"),
+      pkTurnText: document.getElementById("pkTurnText"),
+      submitPkBtn: document.getElementById("submitPkBtn"),
+      pkBackBtn: document.getElementById("pkBackBtn"),
+      pkClearBtn: document.getElementById("pkClearBtn"),
+      rankTag: document.getElementById("rankTag"),
+      metricEliminate: document.getElementById("metricEliminate"),
+      metricBest: document.getElementById("metricBest"),
+      metricState: document.getElementById("metricState"),
+      metricAi: document.getElementById("metricAi"),
+      badgeList: document.getElementById("badgeList"),
+      candidateList: document.getElementById("candidateList"),
+      historyTitle: document.getElementById("historyTitle"),
+      historyTag: document.getElementById("historyTag"),
+      historyList: document.getElementById("historyList"),
+      playTips: document.getElementById("playTips"),
+      tutorialOverlay: document.getElementById("tutorialOverlay"),
+      closeTutorialBtn: document.getElementById("closeTutorialBtn"),
+      openRulesFromTutorialBtn: document.getElementById("openRulesFromTutorialBtn")
+    };
+
+    let timer = null;
+    const suggestionCache = new Map();
+
+    function loadRecords() {
+      try { return JSON.parse(localStorage.getItem(RECORD_KEY)) || {}; } catch { return {}; }
+    }
+
+    function saveRecords() {
+      localStorage.setItem(RECORD_KEY, JSON.stringify(state.records));
+    }
+
+    function loadAchievements() {
+      try { return JSON.parse(localStorage.getItem(ACHIEVEMENT_KEY)) || {}; } catch { return {}; }
+    }
+
+    function saveAchievements() {
+      localStorage.setItem(ACHIEVEMENT_KEY, JSON.stringify(state.achievements));
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        setStatus("已复制。");
+      } catch {
+        const area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        area.remove();
+        setStatus("已复制。");
+      }
+    }
+
+    function todayKey() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function seededAnswer(length, seedText = `${todayKey()}-${length}`) {
+      let seed = 2166136261;
+      for (const ch of seedText) seed = Math.imul(seed ^ ch.charCodeAt(0), 16777619);
+      let out = "";
+      for (let i = 0; i < length; i += 1) {
+        seed = Math.imul(seed ^ (seed >>> 13), 1597334677);
+        out += String(Math.abs(seed) % 10);
+      }
+      return out;
+    }
+
+    function scoreSecretDifficulty(secret) {
+      const tags = [];
+      const unique = new Set(secret).size;
+      const digits = [...secret].map(Number);
+      const repeated = secret.length - unique;
+      const adjacentRuns = digits.slice(1).filter((digit, index) => Math.abs(digit - digits[index]) === 1).length;
+      const hasDatePrefix = /^(19|20)\d{2}/.test(secret) || /^(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])/.test(secret);
+      const span = Math.max(...digits) - Math.min(...digits);
+      let score = 0;
+
+      if (repeated) {
+        score += Math.min(3, repeated * 1.25);
+        tags.push("重复位");
+      }
+      if (secret === [...secret].reverse().join("")) {
+        score += 1.5;
+        tags.push("对称干扰");
+      }
+      if (!/0123|1234|2345|3456|4567|5678|6789|9876|8765|7654|6543|5432|4321|3210/.test(secret) && adjacentRuns <= Math.max(1, Math.floor(secret.length / 3))) {
+        score += 1.6;
+        tags.push("非顺序");
+      }
+      if (unique <= Math.ceil(secret.length * .72) && span >= 5) {
+        score += 1.2;
+        tags.push("分散数字");
+      }
+      if (!hasDatePrefix) {
+        score += 1;
+        tags.push("非生日");
+      }
+      if (!/(.)\1{2}/.test(secret) && !/^(\d)\1+$/.test(secret)) {
+        score += .8;
+        tags.push("低直觉组合");
+      }
+      if (tags.length < 3) tags.push("冷门组合");
+      return { score, tags: tags.slice(0, 5) };
+    }
+
+    function bestHardSecret(length = state.length, rounds = 220) {
+      let best = randomAnswer(length);
+      let bestInfo = scoreSecretDifficulty(best);
+      let ties = 1;
+      for (let i = 0; i < rounds; i += 1) {
+        const candidate = randomAnswer(length);
+        const info = scoreSecretDifficulty(candidate);
+        if (info.score > bestInfo.score) {
+          best = candidate;
+          bestInfo = info;
+          ties = 1;
+        } else if (info.score === bestInfo.score) {
+          ties += 1;
+          if (secureRandomInt(ties) === 0) {
+            best = candidate;
+            bestInfo = info;
+          }
+        }
+      }
+      return { value: best, ...bestInfo };
+    }
+
+    function generateHardSecret(length = state.length) {
+      const hard = bestHardSecret(length, 220);
+      const best = hard.value;
+      const bestInfo = { tags: hard.tags, score: hard.score };
+      state.hardSecret = { value: best, visible: false, tags: bestInfo.tags, score: bestInfo.score };
+      setStatus(`已生成 ${length} 位难题。`);
+      render();
+    }
+
+    function candidatesAfter(history = state.history) {
+      let candidates = makeCandidates(state.length);
+      for (const item of history) {
+        candidates = candidates.filter(candidate => scoreGuess(item.guess, candidate) === item.hits);
+        if (candidates.length === 0) break;
+      }
+      return candidates;
+    }
+
+    function detectConflictRound(history = state.history) {
+      if (history.length === 0 || candidatesAfter(history).length !== 0) return -1;
+      for (let i = history.length - 1; i >= 0; i -= 1) {
+        const rest = history.filter((_, index) => index !== i);
+        if (candidatesAfter(rest).length > 0) return i;
+      }
+      return history.length - 1;
+    }
+
+    function recalcAdvisor() {
+      let candidates = makeCandidates(state.length);
+      state.history = state.history.map(item => {
+        const before = candidates.length;
+        candidates = candidates.filter(candidate => scoreGuess(item.guess, candidate) === item.hits);
+        return { ...item, before, remaining: candidates.length };
+      });
+      state.candidates = candidates;
+      state.conflictIndex = detectConflictRound();
+      state.currentGuess = state.candidates.length ? localSuggestion() : "?".repeat(state.length);
+    }
+
+    function buildShareSummary() {
+      const result = state.lastResult || {
+        mode: state.mode,
+        length: state.length,
+        rounds: state.history.length,
+        time: state.elapsed,
+        rating: rankLabel()
+      };
+      return `弈数天机 ${result.length}位 ${result.rounds}轮${result.mode === "pk" ? "对弈结算" : "破局"}｜${result.rating}｜用时${formatTime(result.time || 0)}`;
+    }
+
+    function resultText(result) {
+      if (!result) return "本局尚未结算。";
+      const extra = result.unlocked?.length ? ` 新成就：${result.unlocked.join("、")}。` : "";
+      if (result.mode === "pk") {
+        return `${result.rating}。${result.winner}，第 ${result.rounds} 轮结算，用时 ${formatTime(result.time || 0)}。A 的答案 ${result.secretA || "-"}，B 的答案 ${result.secretB || "-"}。${extra}`;
+      }
+      return `${result.rating}。答案 ${result.answer || "-"}，${result.rounds} 轮，用时 ${formatTime(result.time || 0)}。${extra}`;
+    }
+
+    function unlockAchievements(result) {
+      if (!result) return [];
+      const unlocked = [];
+      const add = key => {
+        if (!state.achievements[key]) {
+          state.achievements[key] = { name: ACHIEVEMENTS[key], at: new Date().toISOString() };
+          unlocked.push(ACHIEVEMENTS[key]);
+        }
+      };
+      if (result.mode === "practice" || result.mode === "advisor") add("firstWin");
+      if (result.rounds <= 5 && result.mode !== "pk") add("fastWin");
+      if (result.length === 6 && result.mode !== "pk") add("sixWin");
+      if (result.mode === "advisor" && state.conflictIndex < 0) add("advisorClean");
+      if (result.mode === "pk" && result.winner && result.winner !== "平局") add("pkWin");
+      if (unlocked.length) saveAchievements();
+      return unlocked;
+    }
+
+    function settle(result) {
+      const unlocked = unlockAchievements(result);
+      state.lastResult = { ...result, unlocked };
+      els.settlementText.textContent = resultText(state.lastResult);
+      render();
+    }
+
+    function loadApi() {
+      try {
+        return {
+          key: "",
+          url: DEFAULT_API_URL,
+          model: "auto",
+          customModel: "",
+          ...JSON.parse(sessionStorage.getItem(API_KEY) || "{}")
+        };
+      } catch {
+        return { key: "", url: DEFAULT_API_URL, model: "auto", customModel: "" };
+      }
+    }
+
+    function collectApiFields() {
+      return {
+        key: els.apiKeyInput.value.trim(),
+        url: els.apiUrlInput.value.trim() || DEFAULT_API_URL,
+        model: els.modelSelect.value,
+        customModel: els.customModelInput.value.trim()
+      };
+    }
+
+    async function saveApi() {
+      state.api = collectApiFields();
+      sessionStorage.setItem(API_KEY, JSON.stringify(state.api));
+      setStatus("模型设置已保存。Key 只保存在当前浏览器会话。");
+      if (state.api.key) await fetchModels();
+      else {
+        state.modelDiscovery = { status: "idle", models: [], message: "未设置 API Key，当前使用本地军师。" };
+        renderApiFields();
+      }
+      render();
+    }
+
+    function saveApiQuietly() {
+      state.api = {
+        key: els.apiKeyInput.value.trim(),
+        url: els.apiUrlInput.value.trim() || DEFAULT_API_URL,
+        model: els.modelSelect.value,
+        customModel: els.customModelInput.value.trim()
+      };
+      sessionStorage.setItem(API_KEY, JSON.stringify(state.api));
+    }
+
+    function normalizeModelName(id) {
+      return String(id || "").toLowerCase().replace(/[^a-z0-9.]+/g, "-").replace(/^-+|-+$/g, "");
+    }
+
+    function detectProvider(id) {
+      const name = normalizeModelName(id);
+      if (name.includes("claude") || name.includes("anthropic")) return "Claude";
+      if (name.includes("deepseek")) return "DeepSeek";
+      if (name.includes("gpt") || name.includes("openai") || name.includes("chat-latest")) return "OpenAI / ChatGPT";
+      return "其他可用模型";
+    }
+
+    function modelRank(id) {
+      const name = normalizeModelName(id);
+      const index = MODEL_PRIORITY.findIndex(item => name.includes(normalizeModelName(item)));
+      if (index >= 0) return index;
+      if (name.includes("pro") || name.includes("opus")) return 20;
+      if (name.includes("sonnet") || name.includes("flash")) return 35;
+      if (name.includes("mini") || name.includes("haiku") || name.includes("nano")) return 50;
+      return 80;
+    }
+
+    function normalizeModelItem(item) {
+      const id = typeof item === "string" ? item : (item?.id || item?.name || item?.model || "");
+      if (!id) return null;
+      return { id, label: id, provider: detectProvider(id), rank: modelRank(id) };
+    }
+
+    function modelListUrl(url) {
+      try {
+        const parsed = new URL(url || DEFAULT_API_URL);
+        parsed.pathname = parsed.pathname.replace(/\/chat\/completions\/?$/, "/models").replace(/\/completions\/?$/, "/models");
+        if (!parsed.pathname.endsWith("/models")) parsed.pathname = "/v1/models";
+        parsed.search = "";
+        return parsed.toString();
+      } catch {
+        return "https://maoapi.org/v1/models";
+      }
+    }
+
+    function preferredAutoModel() {
+      const models = state.modelDiscovery.models.length ? state.modelDiscovery.models : FALLBACK_MODELS;
+      return [...models].sort((a, b) => modelRank(a.id) - modelRank(b.id) || a.id.localeCompare(b.id))[0]?.id || "gpt-5.5";
+    }
+
+    function activeModel() {
+      if (state.api.model === "custom") return state.api.customModel || preferredAutoModel();
+      if (state.api.model === "auto") return preferredAutoModel();
+      return state.api.model || preferredAutoModel();
+    }
+
+    async function fetchModels() {
+      saveApiQuietly();
+      if (!state.api.key) {
+        state.modelDiscovery = { status: "idle", models: [], message: "未设置 API Key，当前使用本地军师。" };
+        renderApiFields();
+        return;
+      }
+      state.modelDiscovery = { status: "loading", models: [], message: "正在拉取模型列表..." };
+      renderApiFields();
+      try {
+        const res = await fetch(modelListUrl(state.api.url), {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${state.api.key}` }
+        });
+        if (!res.ok) throw new Error(`models ${res.status}`);
+        const json = await res.json();
+        const rawModels = Array.isArray(json.data) ? json.data : (Array.isArray(json.models) ? json.models : []);
+        const models = rawModels.map(normalizeModelItem).filter(Boolean).sort((a, b) => a.rank - b.rank || a.id.localeCompare(b.id));
+        if (!models.length) throw new Error("empty models");
+        state.modelDiscovery = { status: "ok", models, message: `已自动发现 ${models.length} 个模型。` };
+        if (state.api.model !== "custom" && !models.some(model => model.id === state.api.model)) state.api.model = "auto";
+        sessionStorage.setItem(API_KEY, JSON.stringify(state.api));
+      } catch {
+        state.modelDiscovery = { status: "error", models: [], message: "模型列表拉取失败，已切换手动选择。" };
+        if (state.api.model === "auto") state.api.model = preferredAutoModel();
+      }
+      renderApiFields();
+      render();
+    }
+
+    async function testModel() {
+      saveApiQuietly();
+      if (!state.api.key) {
+        setStatus("先保存 API Key，再测试外部模型。", "error");
+        return;
+      }
+      const model = activeModel();
+      setStatus(`正在测试模型 ${model}...`);
+      const probeGuess = DIGITS.slice(0, state.length);
+      try {
+        const res = await fetch(state.api.url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${state.api.key}`
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: "system", content: "Return strict JSON only." },
+              { role: "user", content: JSON.stringify({ guess: probeGuess, reason: "测试", confidence: "medium" }) }
+            ],
+            temperature: 0
+          })
+        });
+        if (!res.ok) throw new Error(`API ${res.status}`);
+        const json = await res.json();
+        const content = json.choices?.[0]?.message?.content || json.choices?.[0]?.text || "";
+        if (!content) throw new Error("empty response");
+        const data = JSON.parse(content.trim().startsWith("{") ? content.trim() : (content.match(/\{[\s\S]*\}/) || [""])[0]);
+        if (!isValidNumber(String(data.guess || ""))) throw new Error("bad test json");
+        setStatus(`模型 ${model} 可用。`, "win");
+      } catch {
+        setStatus(`模型 ${model} 测试失败。AI推演不会冒充本地结果，可单独用本地出牌。`, "error");
+      }
+      render();
+    }
+
+    function padNumber(num, length) {
+      return String(num).padStart(length, "0");
+    }
+
+    function makeCandidates(length) {
+      const total = 10 ** length;
+      const list = new Array(total);
+      for (let i = 0; i < total; i += 1) list[i] = padNumber(i, length);
+      return list;
+    }
+
+    function totalCount() {
+      return 10 ** state.length;
+    }
+
+    function secureRandomInt(max) {
+      const limit = Math.floor(max);
+      if (!Number.isFinite(limit) || limit <= 0) return 0;
+      const cryptoApi = window.crypto || window.msCrypto;
+      if (cryptoApi?.getRandomValues) {
+        const range = 0x100000000;
+        const threshold = range - (range % limit);
+        const bucket = new Uint32Array(1);
+        do {
+          cryptoApi.getRandomValues(bucket);
+        } while (bucket[0] >= threshold);
+        return bucket[0] % limit;
+      }
+      return Math.floor(Math.random() * limit);
+    }
+
+    function randomAnswer(length = state.length) {
+      let out = "";
+      for (let i = 0; i < length; i += 1) out += DIGITS[secureRandomInt(10)];
+      return out;
+    }
+
+    function scoreGuess(guess, answer) {
+      let hits = 0;
+      for (let i = 0; i < guess.length; i += 1) if (guess[i] === answer[i]) hits += 1;
+      return hits;
+    }
+
+    function isValidNumber(value) {
+      return new RegExp(`^\\d{${state.length}}$`).test(value);
+    }
+
+    function filterCandidates() {
+      state.candidates = state.candidates.filter(candidate =>
+        state.history.every(item => scoreGuess(item.guess, candidate) === item.hits)
+      );
+    }
+
+    function sample(list, limit) {
+      if (list.length <= limit) return list;
+      const start = secureRandomInt(Math.max(1, Math.floor(list.length / limit)));
+      const step = Math.max(1, Math.floor(list.length / limit));
+      const out = [];
+      for (let i = start; i < list.length && out.length < limit; i += step) out.push(list[i]);
+      return out;
+    }
+
+    function randomSample(list, limit) {
+      if (list.length <= limit) return [...list];
+      const picked = new Set();
+      while (picked.size < limit) picked.add(list[secureRandomInt(list.length)]);
+      return [...picked];
+    }
+
+    function openingCandidates(length = state.length) {
+      if (length === 4) return ["0123", "4567", "8901", randomAnswer(length)];
+      if (length === 5) return ["01234", "56789", "02468", "13579", randomAnswer(length)];
+      return ["012345", "456789", "024680", "135791", randomAnswer(length)];
+    }
+
+    function profile(guess, candidates) {
+      const buckets = Array(state.length + 1).fill(0);
+      for (const candidate of candidates) buckets[scoreGuess(guess, candidate)] += 1;
+      const total = Math.max(1, candidates.length);
+      const entropy = buckets.reduce((sum, count) => {
+        if (!count) return sum;
+        const probability = count / total;
+        return sum - probability * Math.log2(probability);
+      }, 0);
+      return {
+        worst: Math.max(...buckets),
+        weighted: buckets.reduce((sum, count) => sum + count * count, 0),
+        entropy
+      };
+    }
+
+    function localSuggestion() {
+      if (state.candidates.length === 0) return "?".repeat(state.length);
+      if (state.candidates.length === 1) return state.candidates[0];
+      const cacheKey = `${state.length}|${state.candidates.length}|${state.history.map(item => `${item.guess}:${item.hits}`).join(",")}`;
+      if (suggestionCache.has(cacheKey)) return suggestionCache.get(cacheKey);
+
+      const full = state.candidates.length <= (state.length === 6 ? 850 : 1400);
+      const evalSet = full ? state.candidates : randomSample(state.candidates, state.length === 6 ? 1500 : 2600);
+      const pool = state.history.length === 0
+        ? openingCandidates(state.length)
+        : (full ? state.candidates : [...randomSample(state.candidates, state.length === 6 ? 1200 : 2200), ...openingCandidates(state.length)]);
+      let best = state.candidates[0];
+      let bestScore = { worst: Infinity, weighted: Infinity, entropy: -Infinity };
+      for (const guess of [...new Set(pool)]) {
+        if (!isValidNumber(guess) || !state.history.every(item => scoreGuess(item.guess, guess) === item.hits)) continue;
+        const p = profile(guess, evalSet);
+        if (
+          p.worst < bestScore.worst ||
+          (p.worst === bestScore.worst && p.weighted < bestScore.weighted) ||
+          (p.worst === bestScore.worst && p.weighted === bestScore.weighted && p.entropy > bestScore.entropy)
+        ) {
+          best = guess;
+          bestScore = p;
+        }
+      }
+      suggestionCache.set(cacheKey, best);
+      if (suggestionCache.size > 80) suggestionCache.delete(suggestionCache.keys().next().value);
+      return best;
+    }
+
+    function apiPayload(fallback) {
+      return {
+        model: activeModel(),
+        messages: [
+          {
+            role: "system",
+            content: "You are a strategist for a positional number guessing game. Return strict JSON only. Digits are 0-9, repeats and leading zeroes are allowed. Feedback counts exact position matches only."
+          },
+          {
+            role: "user",
+            content: JSON.stringify({
+              digitLength: state.length,
+              history: state.history.map(({ guess, hits }) => ({ guess, hits })),
+              remainingCandidates: state.candidates.length,
+              candidateSample: sample(state.candidates, 40),
+              localFallbackGuess: fallback,
+              responseShape: { guess: "digits", reason: "short Chinese reason", confidence: "low|medium|high" }
+            })
+          }
+        ],
+        temperature: 0.2
+      };
+    }
+
+    function parseAi(content) {
+      const raw = content.trim();
+      const jsonText = raw.startsWith("{") ? raw : (raw.match(/\{[\s\S]*\}/) || [""])[0];
+      const data = JSON.parse(jsonText);
+      const guess = String(data.guess || "").trim();
+      if (!isValidNumber(guess)) throw new Error("bad guess");
+      if (!state.history.every(item => scoreGuess(item.guess, guess) === item.hits)) throw new Error("model guess conflicts with history");
+      return { guess, reason: String(data.reason || "外部军师给出建议。") };
+    }
+
+    function setAiTrace(steps) {
+      state.aiTrace = steps;
+      renderAiTrace();
+    }
+
+    function updateAiTrace(index, patch) {
+      state.aiTrace[index] = { ...state.aiTrace[index], ...patch };
+      renderAiTrace();
+    }
+
+    function pushAiTrace(step) {
+      state.aiTrace.push(step);
+      renderAiTrace();
+    }
+
+    async function askAi() {
+      if (state.candidates.length === 0) {
+        setStatus("反馈冲突，先核对或编辑战报。", "error");
+        return;
+      }
+      saveApiQuietly();
+      if (!state.api.key) {
+        setAiTrace([
+          { state: "error", mark: "!", text: "未配置 API Key。AI推演不会冒充本地算法，请先保存 Key，或单独点击本地出牌。" }
+        ]);
+        setStatus("AI推演需要真实外部模型 Key。未调用本地算法。", "error");
+        return;
+      }
+      const fallback = localSuggestion();
+      const model = activeModel();
+      const started = performance.now();
+      state.thinking = true;
+      setAiTrace([
+        { state: "done", mark: "1", text: `整理上下文：${state.history.length} 轮战报，剩余 ${state.candidates.length} 个候选，抽样 ${Math.min(state.candidates.length, 40)} 个候选给模型。` },
+        { state: "pending", mark: "2", text: `请求外部模型：${model}。` },
+        { state: "pending", mark: "3", text: "等待模型返回严格 JSON：guess / reason / confidence。" }
+      ]);
+      setStatus(`正在请求外部模型 ${model} 推演...`);
+      render();
+      try {
+        const payload = apiPayload(fallback);
+        const res = await fetch(state.api.url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${state.api.key}`
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error(`API ${res.status}`);
+        updateAiTrace(1, { state: "done", text: `外部模型 ${model} 已响应，用时 ${((performance.now() - started) / 1000).toFixed(1)} 秒。` });
+        const json = await res.json();
+        const content = json.choices?.[0]?.message?.content || json.choices?.[0]?.text || "";
+        const ai = parseAi(content);
+        updateAiTrace(2, { state: "done", text: `解析成功：模型建议 ${ai.guess}。理由：${ai.reason}` });
+        pushAiTrace({ state: "done", mark: "4", text: "已把外部模型结果写入行动卡。下一步把这串数字告诉对手，再录入反馈。" });
+        state.currentGuess = ai.guess;
+        setStatus(`外部模型 ${model} 出牌 ${ai.guess}：${ai.reason}`);
+      } catch (error) {
+        pushAiTrace({ state: "error", mark: "!", text: `外部模型推演失败：${error.message || "请求失败"}。没有自动使用本地算法。` });
+        setStatus("外部模型推演失败。未使用本地算法；可单独点击本地出牌。", "error");
+      } finally {
+        state.thinking = false;
+        render();
+      }
+    }
+
+    function setStatus(text, type = "normal") {
+      els.status.textContent = text;
+      els.status.classList.toggle("win", type === "win");
+      els.status.classList.toggle("error", type === "error");
+    }
+
+    function formatTime(seconds) {
+      return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+    }
+
+    function startTimer() {
+      clearInterval(timer);
+      state.startedAt = Date.now();
+      state.elapsed = 0;
+      timer = setInterval(() => {
+        if (!state.solved) {
+          state.elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
+          renderHud();
+        }
+      }, 1000);
+    }
+
+    function showScreen(screen) {
+      state.screen = screen;
+      els.homeScreen.classList.toggle("active", screen === "home");
+      els.gameScreen.classList.toggle("active", screen === "game");
+      if (screen === "home") clearInterval(timer);
+      window.scrollTo(0, 0);
+      render();
+    }
+
+    function startMode(mode) {
+      state.mode = mode;
+      resetGame();
+      showScreen("game");
+    }
+
+    function startDailyChallenge() {
+      state.mode = "practice";
+      const answer = seededAnswer(state.length);
+      state.dailyChallenge = `${todayKey()}-${state.length}`;
+      resetGame({ answer, daily: true });
+      showScreen("game");
+      setStatus(`今日天机已开启：${state.length} 位固定答案，适合和朋友比轮数。`);
+      render();
+    }
+
+    function setLength(length) {
+      state.length = length;
+      document.querySelectorAll("[data-home-length]").forEach(btn => btn.classList.toggle("active", Number(btn.dataset.homeLength) === length));
+      els.homeRule.textContent = `${length}位，数字可重复，可 0 开头`;
+      if (state.screen === "game") resetGame();
+      render();
+    }
+
+    function resetGame(options = {}) {
+      clearInterval(timer);
+      state.answer = state.mode === "practice" ? (options.answer || randomAnswer()) : "";
+      state.input = "";
+      state.currentGuess = "";
+      state.history = [];
+      state.candidates = makeCandidates(state.length);
+      state.solved = false;
+      state.thinking = false;
+      state.conflictIndex = -1;
+      state.lastResult = null;
+      if (!options.daily) state.dailyChallenge = "";
+      state.aiTrace = [
+        { state: "pending", mark: "待", text: "保存 API Key 后，点击 AI 推演会展示真实请求进度。本地出牌会单独标注。" }
+      ];
+      state.pk = {
+        phase: "setup",
+        secretA: "",
+        secretB: "",
+        input: "",
+        turn: "A",
+        round: 1,
+        pendingAWin: false,
+        attacksA: [],
+        attacksB: [],
+        winner: ""
+      };
+      els.secretA.value = "";
+      els.secretB.value = "";
+      els.manualGuessInput.value = "";
+      els.manualHitsInput.value = "";
+      startTimer();
+      if (state.mode === "practice") setStatus(options.daily ? "今日天机开局。今天同位数答案固定。" : "演武场开局。输入数字，打一张猜测牌。");
+      if (state.mode === "advisor") {
+        state.currentGuess = localSuggestion();
+        setStatus("军师营开局。先报出行动卡，再填对手反馈。");
+      }
+      if (state.mode === "pk") setStatus("对弈场开局。双方先输入秘密数字。");
+      render();
+    }
+
+    function submitPractice() {
+      if (state.solved) return;
+      if (!isValidNumber(state.input)) {
+        setStatus(`需要正好 ${state.length} 位数字。`, "error");
+        return;
+      }
+      const hits = scoreGuess(state.input, state.answer);
+      state.history.push({ actor: "你", guess: state.input, hits, before: state.candidates.length });
+      filterCandidates();
+      state.history[state.history.length - 1].remaining = state.candidates.length;
+      if (hits === state.length) {
+        state.solved = true;
+        clearInterval(timer);
+        saveRecord();
+        setStatus(`破局成功。答案 ${state.answer}，共 ${state.history.length} 轮。`, "win");
+        settle({
+          mode: "practice",
+          length: state.length,
+          answer: state.answer,
+          rounds: state.history.length,
+          time: state.elapsed,
+          rating: rankLabel()
+        });
+      } else {
+        setStatus(`${state.input} 命中 ${hits}/${state.length}。`);
+      }
+      state.input = "";
+      render();
+    }
+
+    function advisorFeedback(hits) {
+      if (!state.currentGuess || state.currentGuess.includes("?")) {
+        setStatus("当前没有有效行动卡。", "error");
+        return;
+      }
+      state.history.push({ actor: "AI", guess: state.currentGuess, hits, before: state.candidates.length });
+      filterCandidates();
+      state.history[state.history.length - 1].remaining = state.candidates.length;
+      state.conflictIndex = detectConflictRound();
+      if (hits === state.length) {
+        state.solved = true;
+        clearInterval(timer);
+        saveRecord();
+        setStatus(`收工。答案就是 ${state.currentGuess}，共 ${state.history.length} 轮。`, "win");
+        settle({
+          mode: "advisor",
+          length: state.length,
+          answer: state.currentGuess,
+          rounds: state.history.length,
+          time: state.elapsed,
+          rating: rankLabel()
+        });
+      } else if (state.candidates.length === 0) {
+        state.currentGuess = "?".repeat(state.length);
+        state.conflictIndex = detectConflictRound();
+        setStatus("反馈冲突：没有任何候选满足战报。撤销上一轮核对。", "error");
+      } else {
+        state.currentGuess = localSuggestion();
+        setStatus(`反馈 ${hits}/${state.length} 已记录，剩余 ${state.candidates.length} 张候选牌。`);
+      }
+      render();
+    }
+
+    function undoAdvisor() {
+      if (state.history.length === 0) {
+        setStatus("没有可撤销的战报。");
+        return;
+      }
+      state.history.pop();
+      recalcAdvisor();
+      state.solved = false;
+      state.lastResult = null;
+      setStatus("已撤销上一轮。");
+      render();
+    }
+
+    function addManualHistory() {
+      const guess = els.manualGuessInput.value.replace(/\D/g, "").slice(0, state.length);
+      const hits = Number(els.manualHitsInput.value);
+      if (!isValidNumber(guess) || !Number.isInteger(hits) || hits < 0 || hits > state.length) {
+        setStatus(`补录需要 ${state.length} 位数字和 0-${state.length} 的命中数。`, "error");
+        return;
+      }
+      state.history.push({ actor: "补录", guess, hits, before: state.candidates.length });
+      recalcAdvisor();
+      els.manualGuessInput.value = "";
+      els.manualHitsInput.value = "";
+      state.solved = hits === state.length;
+      if (state.solved) {
+        clearInterval(timer);
+        saveRecord();
+        setStatus(`补录显示已经破局：${guess}。`, "win");
+        settle({
+          mode: "advisor",
+          length: state.length,
+          answer: guess,
+          rounds: state.history.length,
+          time: state.elapsed,
+          rating: rankLabel()
+        });
+      } else if (state.candidates.length === 0) {
+        setStatus("补录后出现冲突。请核对高亮战报或编辑上一轮反馈。", "error");
+      } else {
+        setStatus(`已补录战报，剩余 ${state.candidates.length} 张候选牌。`);
+      }
+      render();
+    }
+
+    function editLastFeedback() {
+      if (state.history.length === 0) {
+        setStatus("还没有可编辑的战报。");
+        return;
+      }
+      const last = state.history.pop();
+      els.manualGuessInput.value = last.guess;
+      els.manualHitsInput.value = String(last.hits);
+      recalcAdvisor();
+      state.solved = false;
+      state.lastResult = null;
+      setStatus("上一轮已放回补录区，改好命中数后点补录战报。");
+      render();
+    }
+
+    function useLocalSuggestion() {
+      if (state.candidates.length === 0) {
+        setStatus("反馈冲突，先核对战报。", "error");
+        return;
+      }
+      state.currentGuess = localSuggestion();
+      setAiTrace([
+        { state: "done", mark: "本", text: `本地算法出牌 ${state.currentGuess}。这不是外部模型推演，未发送 API 请求。` }
+      ]);
+      setStatus(`本地出牌：${state.currentGuess}。`);
+      render();
+    }
+
+    function showTutorial() {
+      els.tutorialOverlay.classList.remove("hidden");
+    }
+
+    function closeTutorial() {
+      els.tutorialOverlay.classList.add("hidden");
+      state.firstRunSeen = true;
+      localStorage.setItem(FIRST_RUN_KEY, "yes");
+    }
+
+    function startPk() {
+      const a = els.secretA.value.replace(/\D/g, "").slice(0, state.length);
+      const b = els.secretB.value.replace(/\D/g, "").slice(0, state.length);
+      if (!isValidNumber(a) || !isValidNumber(b)) {
+        setStatus(`双方秘密数字都需要正好 ${state.length} 位。`, "error");
+        return;
+      }
+      state.pk.secretA = a;
+      state.pk.secretB = b;
+      state.pk.phase = "battle";
+      state.pk.turn = "A";
+      state.pk.round = 1;
+      state.pk.input = "";
+      setStatus("PK 开始。玩家 A 先攻。");
+      render();
+    }
+
+    function submitPk() {
+      const pk = state.pk;
+      if (pk.winner) return;
+      if (!isValidNumber(pk.input)) {
+        setStatus(`进攻牌需要正好 ${state.length} 位。`, "error");
+        return;
+      }
+      if (pk.turn === "A") {
+        const hits = scoreGuess(pk.input, pk.secretB);
+        pk.attacksA.push({ round: pk.round, guess: pk.input, hits });
+        pk.pendingAWin = hits === state.length;
+        pk.turn = "B";
+        pk.input = "";
+        setStatus(hits === state.length ? "A 已命中，B 本轮仍可反击争平局。" : `A 命中 ${hits}/${state.length}，轮到 B。`);
+      } else {
+        const hits = scoreGuess(pk.input, pk.secretA);
+        pk.attacksB.push({ round: pk.round, guess: pk.input, hits });
+        if (pk.pendingAWin && hits === state.length) {
+          pk.winner = "平局";
+        } else if (pk.pendingAWin) {
+          pk.winner = "玩家 A";
+        } else if (hits === state.length) {
+          pk.winner = "玩家 B";
+        }
+        if (pk.winner) {
+          state.solved = true;
+          clearInterval(timer);
+          setStatus(pk.winner === "平局" ? "同一轮双杀，平局。" : `${pk.winner} 获胜。`, "win");
+          settle({
+            mode: "pk",
+            length: state.length,
+            winner: pk.winner,
+            secretA: pk.secretA,
+            secretB: pk.secretB,
+            rounds: pk.round,
+            time: state.elapsed,
+            rating: pk.winner === "平局" ? "双杀平局" : "破阵得胜"
+          });
+        } else {
+          pk.round += 1;
+          pk.turn = "A";
+          setStatus(`B 命中 ${hits}/${state.length}。进入第 ${pk.round} 轮，A 先攻。`);
+        }
+        pk.pendingAWin = false;
+        pk.input = "";
+      }
+      render();
+    }
+
+    function saveRecord() {
+      const key = `${state.mode}-${state.length}`;
+      const score = Math.max(0, 1200 - state.history.length * 80 - state.elapsed * 2);
+      const record = { rounds: state.history.length, time: state.elapsed, score };
+      const old = state.records[key];
+      if (!old || record.rounds < old.rounds || (record.rounds === old.rounds && record.score > old.score)) {
+        state.records[key] = record;
+        saveRecords();
+      }
+    }
+
+    function recordLabel() {
+      const old = state.records[`${state.mode}-${state.length}`];
+      if (!old) return "暂无";
+      return `${old.rounds}轮 ${old.score}分`;
+    }
+
+    function modeCopy() {
+      if (state.mode === "practice") return ["演武场", "网页藏答案，你来破局。", "演武"];
+      if (state.mode === "advisor") return ["军师营", "AI 出牌，你填真人反馈。", "军师"];
+      return ["对弈场", "同屏双人 PK，轮流进攻。", "对弈"];
+    }
+
+    function rankLabel() {
+      if (state.mode === "pk") return state.pk.winner || (state.pk.phase === "battle" ? `第${state.pk.round}轮` : "设定中");
+      if (state.solved && state.history.length <= Math.ceil(state.length * 1.4)) return "神之一手";
+      if (state.solved) return "破局";
+      if (state.candidates.length === 0) return "冲突";
+      if (state.candidates.length <= 12) return "收尾";
+      return "推进中";
+    }
+
+    function renderHud() {
+      els.hudLength.textContent = String(state.length);
+      els.hudRounds.textContent = state.mode === "pk" ? String(state.pk.round) : String(state.history.length);
+      els.hudCandidates.textContent = state.mode === "pk" ? "-" : String(state.candidates.length);
+      els.hudTime.textContent = formatTime(state.elapsed);
+    }
+
+    function renderModeShell() {
+      const [title, subtitle, tag] = modeCopy();
+      els.gameTitle.textContent = title;
+      els.gameSubtitle.textContent = subtitle;
+      els.actionTag.textContent = `${tag} / ${state.length}位`;
+      els.practicePanel.classList.toggle("hidden", state.mode !== "practice");
+      els.advisorPanel.classList.toggle("hidden", state.mode !== "advisor");
+      els.pkSetupPanel.classList.toggle("hidden", state.mode !== "pk" || state.pk.phase !== "setup");
+      els.pkBattlePanel.classList.toggle("hidden", state.mode !== "pk" || state.pk.phase !== "battle");
+      els.actionTitle.textContent = state.mode === "advisor" ? "AI 行动卡" : state.mode === "pk" ? "PK 行动卡" : "你的行动卡";
+      els.historyTitle.textContent = state.mode === "pk" ? "双方战报" : "战报牌堆";
+    }
+
+    function boardValue() {
+      if (state.mode === "practice") return state.input;
+      if (state.mode === "advisor") return state.currentGuess;
+      if (state.pk.phase === "battle") return state.pk.input;
+      return "";
+    }
+
+    function renderDigits() {
+      const value = boardValue();
+      els.digitBoard.style.gridTemplateColumns = `repeat(${state.length}, minmax(0, 1fr))`;
+      els.digitBoard.innerHTML = "";
+      for (let i = 0; i < state.length; i += 1) {
+        const cell = document.createElement("div");
+        cell.className = "digit-cell";
+        if ((state.mode === "practice" || state.mode === "pk") && i === Math.min(value.length, state.length - 1) && !state.solved) cell.classList.add("active");
+        cell.textContent = value[i] || "";
+        els.digitBoard.appendChild(cell);
+      }
+      els.pkTurnText.textContent = state.pk.turn === "A" ? "玩家 A 进攻，猜玩家 B 的数字。" : "玩家 B 进攻，猜玩家 A 的数字。";
+    }
+
+    function renderFeedback() {
+      els.feedbackGrid.innerHTML = "";
+      for (let i = 0; i <= state.length; i += 1) {
+        const btn = document.createElement("button");
+        btn.className = i === state.length ? "btn primary" : "btn";
+        btn.type = "button";
+        btn.textContent = String(i);
+        btn.setAttribute("aria-label", `反馈 ${i} 个位置正确`);
+        btn.addEventListener("click", () => advisorFeedback(i));
+        els.feedbackGrid.appendChild(btn);
+      }
+    }
+
+    function renderMetrics() {
+      const eliminated = state.mode === "pk" ? 0 : Math.round((1 - state.candidates.length / (10 ** state.length)) * 100);
+      els.metricEliminate.textContent = state.mode === "pk" ? "-" : `${Math.max(0, eliminated)}%`;
+      els.metricBest.textContent = state.mode === "pk" ? "本地局" : recordLabel();
+      els.metricState.textContent = rankLabel();
+      els.metricAi.textContent = state.mode === "advisor" ? (state.api.key ? activeModel() : "本地") : "关闭";
+      els.rankTag.textContent = rankLabel();
+      els.badgeList.innerHTML = "";
+      const badges = [`${state.length}位`, "可重复"];
+      if (state.mode === "advisor") badges.push(state.api.key ? "外部军师" : "本地兜底");
+      if (state.mode === "pk") badges.push("双人同屏");
+      if (state.candidates.length <= 12 && state.mode !== "pk") badges.push("收尾候选");
+      if (state.solved) badges.push("已结算");
+      badges.forEach(text => {
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.textContent = text;
+        els.badgeList.appendChild(badge);
+      });
+    }
+
+    function renderCandidates() {
+      els.candidateList.innerHTML = "";
+      if (state.mode === "pk" || state.candidates.length > 12) return;
+      state.candidates.forEach(candidate => {
+        const chip = document.createElement("span");
+        chip.className = "candidate-chip";
+        chip.textContent = candidate;
+        els.candidateList.appendChild(chip);
+      });
+    }
+
+    function renderPlayTips() {
+      const rows = [];
+      if (state.mode === "practice") {
+        rows.push(["目标", state.history.length ? `继续缩小候选，当前还剩 ${state.candidates.length} 张。` : "先打一张覆盖差异大的猜测牌，反馈会自动写入战报。"]);
+        rows.push(["规则", "只算数字和位置都正确的命中数；0 开头和重复数字都合法。"]);
+        rows.push(["快捷", "数字键输入，Backspace 退格，Enter 提交。"]);
+      } else if (state.mode === "advisor") {
+        if (state.advisorRole === "guess") {
+          rows.push(["流程", "把行动卡报给对手，再点对应命中数。AI 推演和本地出牌互不冒充。"]);
+          rows.push(["本地", "候选多时抽样看最大风险和信息熵，候选少时全量收尾。"]);
+          rows.push(["冲突", "战报不一致时先看右侧高亮轮次，再撤销或补录。"]);
+        } else {
+          rows.push(["出题", "难题生成会保留可重复、可 0 开头规则，但不再偏向 0 开头。"]);
+          rows.push(["标签", "重复位、非顺序、分散数字等标签代表真人更容易误判的特征。"]);
+          rows.push(["部署", "Key 只在浏览器会话里保存，静态部署不会写入源码。"]);
+        }
+      } else if (state.pk.phase === "setup") {
+        rows.push(["准备", `双方各输入 ${state.length} 位秘密数字，提交后输入框会保留隐藏状态。`]);
+        rows.push(["规则", "A 先攻，B 每轮有一次反击机会；同轮双杀算平局。"]);
+        rows.push(["提醒", "双方答案只用于本地自动结算，不会发送到外部 API。"]);
+      } else {
+        rows.push(["回合", state.pk.turn === "A" ? "A 正在进攻 B 的秘密数字。" : "B 正在进攻 A 的秘密数字。"]);
+        rows.push(["胜负", "A 本轮命中后，B 仍可反击争取平局；否则命中者立即获胜。"]);
+        rows.push(["快捷", "数字键输入，Backspace 退格，Enter 提交进攻。"]);
+      }
+      els.playTips.innerHTML = rows.map(([label, text]) => `<div class="tip-row"><strong>${escapeHtml(label)}</strong><span>${escapeHtml(text)}</span></div>`).join("");
+    }
+
+    function renderHistoryEmpty() {
+      if (state.mode === "pk") {
+        const aCount = state.pk.attacksA.length;
+        const bCount = state.pk.attacksB.length;
+        els.historyList.innerHTML = `
+          <div class="empty empty-panel">
+            <h3>${state.pk.phase === "setup" ? "双方布阵" : "进攻面板"}</h3>
+            <p>${state.pk.phase === "setup" ? `先输入 A/B 的 ${state.length} 位秘密数字。` : escapeHtml(state.pk.turn === "A" ? "当前 A 进攻，目标是 B 的秘密数字。" : "当前 B 进攻，目标是 A 的秘密数字。")}</p>
+            <div class="empty-grid">
+              <div class="mini-tile"><span>A 进攻</span><strong>${aCount} 张</strong></div>
+              <div class="mini-tile"><span>B 进攻</span><strong>${bCount} 张</strong></div>
+              <div class="mini-tile"><span>当前回合</span><strong>${state.pk.phase === "setup" ? "设定中" : `第 ${state.pk.round} 轮`}</strong></div>
+              <div class="mini-tile"><span>胜负规则</span><strong>同轮可追平</strong></div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.mode === "practice") {
+        els.historyList.innerHTML = `
+          <div class="empty empty-panel">
+            <h3>开局建议</h3>
+            <p>先用分布均衡的数字试探，再根据命中数缩小候选。</p>
+            <div class="empty-grid">
+              <div class="mini-tile"><span>可试探</span><strong>${escapeHtml(DIGITS.slice(0, state.length))}</strong></div>
+              <div class="mini-tile"><span>当前目标</span><strong>拿到首条反馈</strong></div>
+              <div class="mini-tile"><span>候选总量</span><strong>${totalCount()}</strong></div>
+              <div class="mini-tile"><span>下一步</span><strong>提交猜测</strong></div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      els.historyList.innerHTML = `
+        <div class="empty empty-panel">
+          <h3>军师开局</h3>
+          <p>行动卡已经给出首猜。录入对手反馈后，右侧会变成逐轮战报。</p>
+          <div class="empty-grid">
+            <div class="mini-tile"><span>首猜</span><strong>${escapeHtml(state.currentGuess || "-")}</strong></div>
+            <div class="mini-tile"><span>候选</span><strong>${state.candidates.length}</strong></div>
+            <div class="mini-tile"><span>本地策略</span><strong>minmax + 熵</strong></div>
+            <div class="mini-tile"><span>下一步</span><strong>选择反馈</strong></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderHistory() {
+      els.historyList.innerHTML = "";
+      if (state.mode === "pk") {
+        const rows = [];
+        state.pk.attacksA.forEach(item => rows.push({ actor: "A攻", ...item }));
+        state.pk.attacksB.forEach(item => rows.push({ actor: "B攻", ...item }));
+        rows.sort((a, b) => a.round - b.round || (a.actor > b.actor ? 1 : -1));
+        els.historyTag.textContent = `${rows.length}张`;
+        if (rows.length === 0) {
+          renderHistoryEmpty();
+          return;
+        }
+        rows.reverse().forEach(item => addHistoryCard(item.actor, item.guess, item.hits, `第 ${item.round} 轮`));
+        return;
+      }
+      els.historyTag.textContent = `${state.history.length}轮`;
+      if (state.history.length === 0) {
+        renderHistoryEmpty();
+        return;
+      }
+      [...state.history].reverse().forEach((item, index) => {
+        const originalIndex = state.history.length - 1 - index;
+        addHistoryCard(`#${state.history.length - index}`, item.guess, item.hits, `剩余 ${item.remaining ?? state.candidates.length} 张候选牌`, originalIndex === state.conflictIndex);
+      });
+    }
+
+    function addHistoryCard(label, guess, hits, sub, conflict = false) {
+      const row = document.createElement("div");
+      row.className = `history-card${conflict ? " conflict" : ""}`;
+      row.innerHTML = `
+        <span class="round">${label}</span>
+        <span class="history-main">${guess}</span>
+        <span class="hit">${hits}/${state.length}</span>
+        <span class="history-sub">${sub}</span>
+      `;
+      els.historyList.appendChild(row);
+    }
+
+    function renderApiFields() {
+      els.apiKeyInput.value = state.api.key || "";
+      els.apiUrlInput.value = state.api.url || DEFAULT_API_URL;
+      const current = state.api.model || "auto";
+      const discovered = state.modelDiscovery.models;
+      const groups = new Map();
+      els.modelSelect.innerHTML = "";
+
+      const recommended = document.createElement("optgroup");
+      recommended.label = "推荐";
+      const autoOption = document.createElement("option");
+      autoOption.value = "auto";
+      autoOption.textContent = `自动推荐（${preferredAutoModel()}）`;
+      recommended.appendChild(autoOption);
+      els.modelSelect.appendChild(recommended);
+
+      const source = discovered.length ? discovered : FALLBACK_MODELS.map(model => ({ ...model, rank: modelRank(model.id) }));
+      source.forEach(model => {
+        const provider = model.provider || detectProvider(model.id);
+        if (!groups.has(provider)) {
+          const group = document.createElement("optgroup");
+          group.label = provider;
+          groups.set(provider, group);
+          els.modelSelect.appendChild(group);
+        }
+        const option = document.createElement("option");
+        option.value = model.id;
+        option.textContent = model.label || model.id;
+        groups.get(provider).appendChild(option);
+      });
+
+      const customGroup = document.createElement("optgroup");
+      customGroup.label = "手动兜底";
+      const customOption = document.createElement("option");
+      customOption.value = "custom";
+      customOption.textContent = "自定义模型名";
+      customGroup.appendChild(customOption);
+      els.modelSelect.appendChild(customGroup);
+
+      els.modelSelect.value = [...els.modelSelect.options].some(option => option.value === current) ? current : "auto";
+      els.customModelInput.value = state.api.customModel || "";
+      els.customModelField.classList.toggle("hidden", els.modelSelect.value !== "custom");
+      els.modelStatus.textContent = state.modelDiscovery.message;
+      els.modelStatus.classList.toggle("ok", state.modelDiscovery.status === "ok");
+      els.modelStatus.classList.toggle("error", state.modelDiscovery.status === "error");
+    }
+
+    function renderHome() {
+      els.homeRule.textContent = `${state.length}位，数字可重复，可 0 开头`;
+      document.querySelectorAll("[data-home-length]").forEach(btn => btn.classList.toggle("active", Number(btn.dataset.homeLength) === state.length));
+      const best = Object.values(state.records).sort((a, b) => a.rounds - b.rounds || b.score - a.score)[0];
+      els.homeBest.textContent = best ? `${best.rounds}轮 ${best.score}分` : "暂无";
+      els.homeAchievementCount.textContent = `${Object.keys(state.achievements).length}枚`;
+      els.homeDaily.textContent = state.dailyChallenge === `${todayKey()}-${state.length}` ? "挑战中" : `${state.length}位待开`;
+    }
+
+    function renderAdvisorMode() {
+      const guessing = state.advisorRole === "guess";
+      els.advisorGuessPanel.classList.toggle("hidden", !guessing);
+      els.advisorHostPanel.classList.toggle("hidden", guessing);
+      els.advisorGuessTab.classList.toggle("active", guessing);
+      els.advisorHostTab.classList.toggle("active", !guessing);
+      if (state.mode === "advisor") {
+        els.actionTitle.textContent = guessing ? "军师行动卡" : "出题密令";
+        els.actionTag.textContent = `${guessing ? "我来猜" : "我要出题"} / ${state.length}位`;
+      }
+      els.askAiBtn.disabled = state.thinking || state.solved || !guessing;
+      els.localGuessBtn.disabled = state.thinking || state.solved || !guessing;
+      els.undoAdvisorBtn.disabled = state.thinking || !state.history.length;
+    }
+
+    function renderHardSecret() {
+      if (!state.hardSecret.value || state.hardSecret.value.length !== state.length) {
+        const value = generateHardSecretPreview();
+        state.hardSecret = { value, visible: false, ...scoreSecretDifficulty(value) };
+      }
+      els.hardSecretValue.textContent = state.hardSecret.visible ? state.hardSecret.value : "•".repeat(state.length);
+      els.hardSecretTags.innerHTML = "";
+      state.hardSecret.tags.forEach(text => {
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.textContent = text;
+        els.hardSecretTags.appendChild(badge);
+      });
+      els.toggleSecretBtn.textContent = state.hardSecret.visible ? "隐藏答案" : "显示答案";
+    }
+
+    function generateHardSecretPreview() {
+      let best = randomAnswer();
+      let bestInfo = scoreSecretDifficulty(best);
+      for (let i = 0; i < 60; i += 1) {
+        const candidate = randomAnswer();
+        const info = scoreSecretDifficulty(candidate);
+        if (info.score > bestInfo.score) {
+          best = candidate;
+          bestInfo = info;
+        }
+      }
+      return best;
+    }
+
+    function renderAiTrace() {
+      if (!els.aiTraceSteps) return;
+      els.aiTraceSteps.innerHTML = "";
+      const steps = state.aiTrace.length ? state.aiTrace : [{ state: "pending", mark: "待", text: "等待推演。" }];
+      steps.forEach(step => {
+        const row = document.createElement("div");
+        row.className = `trace-step ${step.state || "pending"}`;
+        row.innerHTML = `<span>${escapeHtml(step.mark || "•")}</span><div>${escapeHtml(step.text || "")}</div>`;
+        els.aiTraceSteps.appendChild(row);
+      });
+    }
+
+    function renderConflictCoach() {
+      if (state.mode !== "advisor") return;
+      if (state.conflictIndex >= 0 && state.history[state.conflictIndex]) {
+        const item = state.history[state.conflictIndex];
+        els.conflictCoach.textContent = `冲突定位：优先核对第 ${state.conflictIndex + 1} 轮，猜 ${item.guess}，反馈 ${item.hits}/${state.length}。可以点“编辑上一轮反馈”或撤销后重录。`;
+      } else if (state.candidates.length <= 12 && state.candidates.length > 0) {
+        els.conflictCoach.textContent = `收尾阶段：还剩 ${state.candidates.length} 张候选牌，优先使用候选牌堆里的数字确认。`;
+      } else {
+        els.conflictCoach.textContent = "反馈冲突时，军师会指出最该核对的一轮。";
+      }
+    }
+
+    function renderSettlement() {
+      const visible = Boolean(state.lastResult && state.solved);
+      els.settlementPanel.classList.toggle("hidden", !visible);
+      if (visible) els.settlementText.textContent = resultText(state.lastResult);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function render() {
+      renderHome();
+      renderHud();
+      renderModeShell();
+      renderAdvisorMode();
+      renderDigits();
+      renderFeedback();
+      renderMetrics();
+      renderCandidates();
+      renderPlayTips();
+      renderHistory();
+      renderHardSecret();
+      renderAiTrace();
+      renderConflictCoach();
+      renderSettlement();
+    }
+
+    function appendDigit(digit, target) {
+      if (target === "practice" && state.mode === "practice" && !state.solved && state.input.length < state.length) state.input += digit;
+      if (target === "pk" && state.mode === "pk" && state.pk.phase === "battle" && !state.pk.winner && state.pk.input.length < state.length) state.pk.input += digit;
+      renderDigits();
+    }
+
+    function buildKeypad(el, target) {
+      for (const digit of DIGITS) {
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.type = "button";
+        btn.textContent = digit;
+        btn.setAttribute("aria-label", `输入数字 ${digit}`);
+        btn.addEventListener("click", () => appendDigit(digit, target));
+        el.appendChild(btn);
+      }
+    }
+
+    function setup() {
+      buildKeypad(els.keypad, "practice");
+      buildKeypad(els.pkKeypad, "pk");
+      document.querySelectorAll("[data-home-length]").forEach(btn => btn.addEventListener("click", () => setLength(Number(btn.dataset.homeLength))));
+      document.querySelectorAll("[data-start-mode]").forEach(btn => btn.addEventListener("click", () => startMode(btn.dataset.startMode)));
+      els.enterGameBtn.addEventListener("click", () => {
+        els.modeGrid.classList.remove("collapsed");
+        els.modeGrid.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+      els.rulesBtn.addEventListener("click", () => els.ruleStrip.classList.toggle("hidden"));
+      els.tutorialBtn.addEventListener("click", showTutorial);
+      els.dailyChallengeBtn.addEventListener("click", startDailyChallenge);
+      els.homeBtn.addEventListener("click", () => showScreen("home"));
+      els.submitPracticeBtn.addEventListener("click", submitPractice);
+      els.backBtn.addEventListener("click", () => { state.input = state.input.slice(0, -1); renderDigits(); });
+      els.clearBtn.addEventListener("click", () => { state.input = ""; renderDigits(); });
+      els.askAiBtn.addEventListener("click", askAi);
+      els.localGuessBtn.addEventListener("click", useLocalSuggestion);
+      els.undoAdvisorBtn.addEventListener("click", undoAdvisor);
+      els.advisorGuessTab.addEventListener("click", () => { state.advisorRole = "guess"; render(); });
+      els.advisorHostTab.addEventListener("click", () => { state.advisorRole = "host"; render(); });
+      els.addManualHistoryBtn.addEventListener("click", addManualHistory);
+      els.editLastFeedbackBtn.addEventListener("click", editLastFeedback);
+      els.generateHardSecretBtn.addEventListener("click", () => generateHardSecret(state.length));
+      els.toggleSecretBtn.addEventListener("click", () => {
+        state.hardSecret.visible = !state.hardSecret.visible;
+        renderHardSecret();
+      });
+      els.copySecretBtn.addEventListener("click", () => {
+        if (!state.hardSecret.value) generateHardSecret(state.length);
+        copyText(state.hardSecret.value);
+      });
+      els.copyShareBtn.addEventListener("click", () => copyText(buildShareSummary()));
+      els.newRoundBtn.addEventListener("click", () => resetGame());
+      els.modelSelect.addEventListener("change", () => {
+        state.api.model = els.modelSelect.value;
+        els.customModelField.classList.toggle("hidden", els.modelSelect.value !== "custom");
+        saveApiQuietly();
+        renderMetrics();
+      });
+      els.saveApiBtn.addEventListener("click", saveApi);
+      els.refreshModelsBtn.addEventListener("click", fetchModels);
+      els.testModelBtn.addEventListener("click", testModel);
+      els.startPkBtn.addEventListener("click", startPk);
+      els.submitPkBtn.addEventListener("click", submitPk);
+      els.pkBackBtn.addEventListener("click", () => { state.pk.input = state.pk.input.slice(0, -1); renderDigits(); });
+      els.pkClearBtn.addEventListener("click", () => { state.pk.input = ""; renderDigits(); });
+      els.closeTutorialBtn.addEventListener("click", closeTutorial);
+      els.openRulesFromTutorialBtn.addEventListener("click", () => {
+        closeTutorial();
+        els.ruleStrip.classList.remove("hidden");
+      });
+      document.addEventListener("keydown", event => {
+        if (state.screen !== "game") return;
+        if (event.key >= "0" && event.key <= "9") {
+          if (state.mode === "practice") appendDigit(event.key, "practice");
+          if (state.mode === "pk") appendDigit(event.key, "pk");
+        } else if (event.key === "Backspace") {
+          if (state.mode === "practice") state.input = state.input.slice(0, -1);
+          if (state.mode === "pk") state.pk.input = state.pk.input.slice(0, -1);
+          renderDigits();
+        } else if (event.key === "Enter") {
+          if (state.mode === "practice") submitPractice();
+          if (state.mode === "pk" && state.pk.phase === "battle") submitPk();
+        }
+      });
+      renderApiFields();
+      if (!state.firstRunSeen) showTutorial();
+      render();
+      if (state.api.key) fetchModels();
+    }
+
+    setup();
+  </script>
+</body>
+</html>
