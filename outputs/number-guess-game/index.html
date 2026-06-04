@@ -919,6 +919,10 @@
       background: var(--card);
     }
 
+    .opponent-feedback-box {
+      margin-top: 12px;
+    }
+
     .secret-value {
       margin: 8px 0;
       font-size: clamp(34px, 8vw, 62px);
@@ -1639,6 +1643,26 @@
                   <button class="btn small blue" id="copySecretBtn" type="button">复制答案</button>
                 </div>
               </div>
+              <div class="secret-box opponent-feedback-box">
+                <h3>对手反馈</h3>
+                <p>把你的秘密数字和对手猜的数字填进来，军师会按正位规则告诉你命中几个。</p>
+                <div class="settings-grid">
+                  <div class="field">
+                    <label for="hostSecretInput">我的秘密数字</label>
+                    <input id="hostSecretInput" type="password" inputmode="numeric" autocomplete="off" placeholder="例如 02758">
+                  </div>
+                  <div class="field">
+                    <label for="opponentGuessInput">对手猜测</label>
+                    <input id="opponentGuessInput" inputmode="numeric" autocomplete="off" placeholder="输入对手猜的数字">
+                  </div>
+                </div>
+                <div class="model-tools">
+                  <button class="btn small blue" id="useHardSecretAsHostBtn" type="button">使用上方难题</button>
+                  <button class="btn small primary" id="scoreOpponentGuessBtn" type="button">计算反馈</button>
+                  <button class="btn small" id="copyOpponentFeedbackBtn" type="button">复制反馈</button>
+                </div>
+                <div class="coach-box" id="opponentFeedbackResult">等待录入对手猜测。</div>
+              </div>
             </div>
             <details class="paper-card" id="apiDetails" style="margin-top:12px">
               <summary>军师模型设置</summary>
@@ -1803,6 +1827,7 @@
       firstRunSeen: localStorage.getItem(FIRST_RUN_KEY) === "yes",
       advisorRole: "guess",
       hardSecret: { value: "", visible: false, tags: [], score: 0 },
+      opponentFeedback: { secret: "", guess: "", hits: null },
       conflictIndex: -1,
       lastResult: null,
       aiTrace: [
@@ -1883,6 +1908,12 @@
       generateHardSecretBtn: document.getElementById("generateHardSecretBtn"),
       toggleSecretBtn: document.getElementById("toggleSecretBtn"),
       copySecretBtn: document.getElementById("copySecretBtn"),
+      hostSecretInput: document.getElementById("hostSecretInput"),
+      opponentGuessInput: document.getElementById("opponentGuessInput"),
+      useHardSecretAsHostBtn: document.getElementById("useHardSecretAsHostBtn"),
+      scoreOpponentGuessBtn: document.getElementById("scoreOpponentGuessBtn"),
+      copyOpponentFeedbackBtn: document.getElementById("copyOpponentFeedbackBtn"),
+      opponentFeedbackResult: document.getElementById("opponentFeedbackResult"),
       aiTraceSteps: document.getElementById("aiTraceSteps"),
       askAiBtn: document.getElementById("askAiBtn"),
       localGuessBtn: document.getElementById("localGuessBtn"),
@@ -2564,6 +2595,7 @@
       state.thinking = false;
       state.conflictIndex = -1;
       state.lastResult = null;
+      state.opponentFeedback = { secret: "", guess: "", hits: null };
       if (!options.daily) state.dailyChallenge = "";
       state.aiTrace = [
         { state: "pending", mark: "待", text: "保存 API Key 后，点击 AI 推演会展示真实请求进度。本地出牌会单独标注。" }
@@ -2584,6 +2616,8 @@
       els.secretB.value = "";
       els.manualGuessInput.value = "";
       els.manualHitsInput.value = "";
+      els.hostSecretInput.value = "";
+      els.opponentGuessInput.value = "";
       startTimer();
       if (state.mode === "practice") setStatus(options.daily ? "今日天机开局。今天同位数答案固定。" : "演武场开局。输入数字，打一张猜测牌。");
       if (state.mode === "advisor") {
@@ -2728,6 +2762,63 @@
       ]);
       setStatus(`本地出牌：${state.currentGuess}。`);
       render();
+    }
+
+    function cleanDigits(value) {
+      return String(value || "").replace(/\D/g, "").slice(0, state.length);
+    }
+
+    function syncOpponentFeedbackInputs() {
+      state.opponentFeedback.secret = cleanDigits(els.hostSecretInput.value);
+      state.opponentFeedback.guess = cleanDigits(els.opponentGuessInput.value);
+      els.hostSecretInput.value = state.opponentFeedback.secret;
+      els.opponentGuessInput.value = state.opponentFeedback.guess;
+      state.opponentFeedback.hits = null;
+      renderOpponentFeedback();
+    }
+
+    function useHardSecretAsHost() {
+      if (!state.hardSecret.value || state.hardSecret.value.length !== state.length) {
+        const value = generateHardSecretPreview();
+        state.hardSecret = { value, visible: false, ...scoreSecretDifficulty(value) };
+      }
+      state.opponentFeedback.secret = state.hardSecret.value;
+      els.hostSecretInput.value = state.hardSecret.value;
+      state.opponentFeedback.hits = null;
+      setStatus("已把上方难题填入我的秘密数字。");
+      renderOpponentFeedback();
+    }
+
+    function scoreOpponentGuess() {
+      const secret = cleanDigits(els.hostSecretInput.value);
+      const guess = cleanDigits(els.opponentGuessInput.value);
+      els.hostSecretInput.value = secret;
+      els.opponentGuessInput.value = guess;
+      if (!isValidNumber(secret) || !isValidNumber(guess)) {
+        setStatus(`我的秘密数字和对手猜测都需要正好 ${state.length} 位。`, "error");
+        state.opponentFeedback = { secret, guess, hits: null };
+        renderOpponentFeedback();
+        return;
+      }
+      const hits = scoreGuess(guess, secret);
+      state.opponentFeedback = { secret, guess, hits };
+      setStatus(`对手猜 ${guess}，反馈 ${hits}/${state.length}。`);
+      renderOpponentFeedback();
+    }
+
+    function opponentFeedbackText() {
+      const { guess, hits } = state.opponentFeedback;
+      if (!guess || hits === null) return "";
+      return `对手猜 ${guess}，命中 ${hits}/${state.length}`;
+    }
+
+    function copyOpponentFeedback() {
+      const text = opponentFeedbackText();
+      if (!text) {
+        setStatus("先计算一次对手反馈。", "error");
+        return;
+      }
+      copyText(text);
     }
 
     function showTutorial() {
@@ -3126,6 +3217,20 @@
       els.toggleSecretBtn.textContent = state.hardSecret.visible ? "隐藏答案" : "显示答案";
     }
 
+    function renderOpponentFeedback() {
+      if (!els.opponentFeedbackResult) return;
+      const { secret, guess, hits } = state.opponentFeedback;
+      const ready = isValidNumber(secret) && isValidNumber(guess) && hits !== null;
+      els.copyOpponentFeedbackBtn.disabled = !ready;
+      if (ready) {
+        els.opponentFeedbackResult.textContent = `反馈结果：对手猜 ${guess}，命中 ${hits}/${state.length}。`;
+      } else if (secret || guess) {
+        els.opponentFeedbackResult.textContent = `请补齐 ${state.length} 位秘密数字和 ${state.length} 位对手猜测。`;
+      } else {
+        els.opponentFeedbackResult.textContent = "等待录入对手猜测。";
+      }
+    }
+
     function generateHardSecretPreview() {
       let best = randomAnswer();
       let bestInfo = scoreSecretDifficulty(best);
@@ -3190,6 +3295,7 @@
       renderPlayTips();
       renderHistory();
       renderHardSecret();
+      renderOpponentFeedback();
       renderAiTrace();
       renderConflictCoach();
       renderSettlement();
@@ -3245,6 +3351,11 @@
         if (!state.hardSecret.value) generateHardSecret(state.length);
         copyText(state.hardSecret.value);
       });
+      els.hostSecretInput.addEventListener("input", syncOpponentFeedbackInputs);
+      els.opponentGuessInput.addEventListener("input", syncOpponentFeedbackInputs);
+      els.useHardSecretAsHostBtn.addEventListener("click", useHardSecretAsHost);
+      els.scoreOpponentGuessBtn.addEventListener("click", scoreOpponentGuess);
+      els.copyOpponentFeedbackBtn.addEventListener("click", copyOpponentFeedback);
       els.copyShareBtn.addEventListener("click", () => copyText(buildShareSummary()));
       els.newRoundBtn.addEventListener("click", () => resetGame());
       els.modelSelect.addEventListener("change", () => {
