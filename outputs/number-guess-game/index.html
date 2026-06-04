@@ -827,11 +827,17 @@
       border-radius: 0;
     }
 
-    details.paper-card {
+    details.paper-card, details.side-details {
       padding: 0;
       overflow: hidden;
       color: var(--ink);
       background: var(--card);
+    }
+
+    details.side-details {
+      margin-top: 12px;
+      border: 3px solid var(--line);
+      box-shadow: 6px 6px 0 var(--shadow);
     }
 
     details summary {
@@ -973,6 +979,78 @@
       font-size: 20px;
       line-height: 1.1;
       font-variant-numeric: tabular-nums;
+    }
+
+    .endgame-panel {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 10px;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.14) 0 12px, transparent 12px),
+        oklch(0.80 0.07 78);
+      border: 3px solid var(--line);
+      box-shadow: inset 0 -6px 0 rgba(72, 39, 13, .10);
+    }
+
+    .endgame-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .endgame-head strong {
+      color: oklch(0.21 0.06 52);
+      font-size: 16px;
+    }
+
+    .endgame-head span {
+      display: inline-flex;
+      min-height: 26px;
+      align-items: center;
+      padding: 3px 7px;
+      color: var(--light);
+      background: var(--panel-2);
+      border: 3px solid var(--line);
+      font-size: 11px;
+    }
+
+    .endgame-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .endgame-grid div {
+      min-height: 54px;
+      padding: 7px;
+      background: var(--card);
+      border: 3px solid var(--line);
+    }
+
+    .endgame-grid span {
+      display: block;
+      margin-bottom: 5px;
+      color: oklch(0.34 0.045 62);
+      font-size: 11px;
+    }
+
+    .endgame-grid strong {
+      display: block;
+      color: oklch(0.21 0.06 52);
+      font-size: 18px;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .endgame-reason {
+      padding: 7px;
+      background: rgba(255, 239, 177, .44);
+      border: 3px dashed oklch(0.27 0.055 55);
+      font-size: 12px;
+      line-height: 1.45;
     }
 
     .history-list {
@@ -1367,6 +1445,419 @@
       }
     }
 
+    @media (max-height: 820px) and (min-width: 761px) {
+      .app {
+        width: min(1480px, calc(100% - 20px));
+        padding-top: 10px;
+        padding-bottom: 28px;
+      }
+      .hero {
+        min-height: auto;
+        gap: 18px;
+        padding: 18px clamp(14px, 3vw, 36px) 4px;
+      }
+      .hero-copy {
+        padding: 12px 16px 14px;
+        box-shadow:
+          8px 9px 0 rgba(50, 30, 13, .42),
+          inset 0 0 0 5px rgba(255, 235, 172, .13),
+          inset 0 -10px 0 rgba(55, 31, 10, .18);
+      }
+      .brand-kicker {
+        margin: 4px 0 6px 6px;
+        padding: 5px 10px;
+        font-size: 12px;
+        letter-spacing: .06em;
+      }
+      h1 {
+        margin-bottom: 4px;
+        font-size: clamp(42px, 5vw, 68px);
+        line-height: .98;
+        -webkit-text-stroke-width: 2px;
+      }
+      .subtitle {
+        font-size: clamp(15px, 1.2vw, 19px);
+        line-height: 1.3;
+      }
+      .sigil-row {
+        gap: 9px;
+        margin: 10px 0 8px;
+      }
+      .sigil-card {
+        width: clamp(46px, 5vw, 68px);
+        border-width: 4px;
+        font-size: clamp(30px, 3.8vw, 48px);
+      }
+      .home-actions {
+        margin-top: 12px;
+      }
+      .home-actions .btn {
+        min-height: 42px;
+        padding-inline: 14px;
+        font-size: 16px;
+      }
+      .home-actions .btn.primary {
+        min-width: 140px;
+      }
+      .home-top-card {
+        margin-top: 12px;
+        margin-left: 0;
+        padding: 14px;
+        transform: none;
+      }
+      .home-top-card::before,
+      .home-top-card::after {
+        display: none;
+      }
+      .home-top-card strong {
+        margin-bottom: 5px;
+        font-size: 15px;
+      }
+      .home-dashboard {
+        gap: 5px;
+        margin-top: 7px;
+      }
+      .home-stat {
+        padding: 5px 7px;
+      }
+      .length-select {
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .mode-grid {
+        margin: 16px 0 20px;
+        padding: 0 clamp(8px, 2vw, 26px);
+        gap: 14px;
+      }
+      .mode-card {
+        min-height: 210px;
+        padding: 15px;
+        gap: 8px;
+      }
+      .mode-card::before {
+        inset: 9px;
+        border-width: 3px;
+      }
+      .mode-card::after {
+        width: 54px;
+        height: 54px;
+        top: 13px;
+        right: 13px;
+        background:
+          linear-gradient(var(--mode-a), var(--mode-a)) 9px 0 / 30px 9px no-repeat,
+          linear-gradient(var(--mode-b), var(--mode-b)) 0 9px / 48px 30px no-repeat,
+          linear-gradient(var(--mode-deep), var(--mode-deep)) 9px 39px / 30px 9px no-repeat,
+          linear-gradient(rgba(255,255,255,.32), rgba(255,255,255,.32)) 13px 13px / 14px 14px no-repeat;
+        border-width: 3px;
+      }
+      .mode-kicker {
+        min-height: 22px;
+        padding: 3px 6px;
+        font-size: 10px;
+      }
+      .mode-card h2 {
+        margin: 7px 0 6px;
+        font-size: clamp(26px, 2.5vw, 34px);
+      }
+      .mode-card p {
+        min-height: 0;
+        max-width: calc(100% - 48px);
+        padding: 6px 8px;
+        font-size: 13px;
+        line-height: 1.35;
+      }
+      .mode-meta {
+        gap: 5px;
+        margin: 7px 0;
+      }
+      .chip {
+        min-height: 23px;
+        padding: 3px 6px;
+        font-size: 10px;
+      }
+      .nav {
+        margin-bottom: 10px;
+        padding: 8px;
+      }
+      .nav-title {
+        padding: 7px 10px;
+      }
+      .hud-card {
+        padding: 6px 7px;
+      }
+      .hud-card span,
+      .metric span {
+        margin-bottom: 4px;
+      }
+      .hud-card strong,
+      .metric strong {
+        font-size: 17px;
+      }
+      .game-layout {
+        grid-template-columns: 1fr;
+        align-items: start;
+        min-height: auto;
+        gap: 12px;
+        padding: 10px;
+      }
+      .play-card,
+      .panel.pad {
+        padding: 13px;
+      }
+      .side-stack {
+        min-height: auto;
+      }
+      .history-list {
+        min-height: 190px;
+      }
+    }
+
+    @media (max-height: 680px) and (min-width: 761px) {
+      .app {
+        width: min(1280px, calc(100% - 16px));
+        padding-top: 8px;
+      }
+      .hero {
+        grid-template-columns: minmax(0, 1fr) minmax(250px, 310px);
+        gap: 12px;
+        padding: 10px 12px 0;
+      }
+      .hero-copy {
+        padding: 10px 12px;
+      }
+      .brand-kicker {
+        margin: 0 0 5px;
+      }
+      h1 {
+        font-size: clamp(36px, 5vw, 56px);
+        text-shadow:
+          3px 3px 0 oklch(0.42 0.095 58),
+          6px 6px 0 rgba(72, 41, 15, .42);
+      }
+      .subtitle {
+        font-size: 14px;
+      }
+      .sigil-row {
+        margin: 8px 0 6px;
+      }
+      .sigil-card {
+        width: clamp(40px, 5vw, 56px);
+        font-size: clamp(26px, 3.5vw, 40px);
+      }
+      .home-actions .btn {
+        min-height: 36px;
+        padding: 5px 10px;
+        font-size: 14px;
+      }
+      .home-top-card {
+        margin-top: 0;
+        padding: 10px;
+      }
+      .home-top-card .btn {
+        min-height: 30px;
+      }
+      .home-stat {
+        min-height: 26px;
+      }
+      .mode-grid {
+        margin-top: 12px;
+        gap: 10px;
+      }
+      .mode-card {
+        min-height: 164px;
+        padding: 12px;
+      }
+      .mode-card::after {
+        display: none;
+      }
+      .mode-card h2 {
+        margin: 5px 0;
+        font-size: 25px;
+      }
+      .mode-card p {
+        max-width: 100%;
+        padding: 5px 7px;
+        font-size: 12px;
+        line-height: 1.32;
+      }
+      .mode-meta {
+        display: none;
+      }
+      .mode-card .btn {
+        min-height: 34px;
+        font-size: 12px;
+      }
+      .nav {
+        grid-template-columns: auto minmax(180px, .7fr) minmax(280px, 1fr);
+        gap: 8px;
+      }
+      .nav > .btn {
+        min-height: 36px;
+      }
+      .nav-title strong {
+        font-size: 17px;
+      }
+      .nav-title span {
+        margin-top: 3px;
+        font-size: 11px;
+      }
+      .hud {
+        grid-template-columns: repeat(4, minmax(58px, 1fr));
+      }
+      .hud-card {
+        border-width: 3px;
+        box-shadow: 4px 4px 0 rgba(0,0,0,.30);
+      }
+      .game-layout {
+        border-width: 4px;
+        padding: 8px;
+      }
+      .card-head {
+        margin-bottom: 8px;
+      }
+      .card-head h2 {
+        font-size: 18px;
+      }
+      .digits {
+        margin: 7px 0 9px;
+      }
+      .digit-cell {
+        font-size: clamp(28px, 4.5vw, 48px);
+        border-width: 3px;
+      }
+      .status {
+        min-height: 38px;
+        margin: 7px 0 10px;
+        padding: 7px 9px;
+      }
+      .play-tips {
+        margin-top: 10px;
+        padding-top: 9px;
+      }
+      .tip-row,
+      .trace-step,
+      .endgame-reason,
+      .empty-panel p {
+        font-size: 11px;
+      }
+      .history-list {
+        min-height: 160px;
+      }
+    }
+
+    @media (max-height: 680px) and (max-width: 760px) {
+      .app {
+        width: min(100% - 12px, 740px);
+        padding-top: 8px;
+        padding-bottom: 24px;
+      }
+      .hero {
+        padding: 8px 0 0;
+        gap: 10px;
+      }
+      .hero-copy {
+        padding: 10px 12px;
+      }
+      .brand-kicker {
+        margin: 0 0 5px;
+        padding: 4px 8px;
+        font-size: 11px;
+        letter-spacing: .04em;
+      }
+      h1 {
+        margin-bottom: 4px;
+        font-size: clamp(34px, 9vw, 48px);
+        line-height: 1;
+        -webkit-text-stroke-width: 2px;
+        text-shadow:
+          3px 3px 0 oklch(0.42 0.095 58),
+          5px 5px 0 rgba(72, 41, 15, .40);
+      }
+      .subtitle {
+        font-size: 13px;
+        line-height: 1.3;
+      }
+      .sigil-row {
+        justify-content: flex-start;
+        gap: 7px;
+        margin: 7px 0 6px;
+      }
+      .sigil-card {
+        width: clamp(36px, 10vw, 48px);
+        border-width: 3px;
+        font-size: clamp(24px, 7vw, 34px);
+      }
+      .home-actions {
+        margin-top: 9px;
+      }
+      .home-actions .btn {
+        min-height: 34px;
+        padding: 5px 9px;
+        font-size: 13px;
+      }
+      .home-top-card {
+        margin-top: 10px;
+        padding: 10px;
+      }
+      .home-top-card::before,
+      .home-top-card::after,
+      .mode-card::after {
+        display: none;
+      }
+      .home-dashboard {
+        gap: 5px;
+        margin-top: 6px;
+      }
+      .home-stat {
+        padding: 5px 7px;
+      }
+      .mode-grid {
+        margin-top: 12px;
+        gap: 10px;
+        padding: 0;
+      }
+      .mode-card {
+        min-height: 150px;
+        padding: 12px;
+      }
+      .mode-card h2 {
+        margin: 5px 0;
+        font-size: 25px;
+      }
+      .mode-card p {
+        max-width: 100%;
+        min-height: 0;
+        padding: 5px 7px;
+        font-size: 12px;
+        line-height: 1.32;
+      }
+      .mode-meta {
+        display: none;
+      }
+      .mode-card .btn {
+        min-height: 34px;
+        font-size: 12px;
+      }
+      .nav {
+        margin-bottom: 8px;
+        padding: 8px;
+      }
+      .game-layout {
+        padding: 8px;
+      }
+      .panel.pad,
+      .play-card {
+        padding: 11px;
+      }
+      .digit-cell {
+        font-size: clamp(26px, 10vw, 42px);
+      }
+      .status {
+        min-height: 38px;
+        margin: 7px 0 10px;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: .01ms !important;
@@ -1623,6 +2114,26 @@
                 <button class="btn small blue" id="addManualHistoryBtn" type="button">补录战报</button>
                 <button class="btn small" id="editLastFeedbackBtn" type="button">编辑上一轮反馈</button>
               </div>
+              <div class="secret-box opponent-feedback-box">
+                <h3>对手反馈</h3>
+                <p>对手也在猜你时，把你的秘密数字和对手猜测填进来，军师会按正位规则告诉你命中几个。</p>
+                <div class="settings-grid">
+                  <div class="field">
+                    <label for="hostSecretInput">我的秘密数字</label>
+                    <input id="hostSecretInput" type="password" inputmode="numeric" autocomplete="off" placeholder="例如 02758">
+                  </div>
+                  <div class="field">
+                    <label for="opponentGuessInput">对手猜测</label>
+                    <input id="opponentGuessInput" inputmode="numeric" autocomplete="off" placeholder="输入对手猜的数字">
+                  </div>
+                </div>
+                <div class="model-tools">
+                  <button class="btn small blue" id="useHardSecretAsHostBtn" type="button">使用上方难题</button>
+                  <button class="btn small primary" id="scoreOpponentGuessBtn" type="button">计算反馈</button>
+                  <button class="btn small" id="copyOpponentFeedbackBtn" type="button">复制反馈</button>
+                </div>
+                <div class="coach-box" id="opponentFeedbackResult">等待录入对手猜测。</div>
+              </div>
               <div class="ai-trace" id="aiTrace">
                 <strong>外部模型推演过程</strong>
                 <div id="aiTraceSteps">
@@ -1643,59 +2154,7 @@
                   <button class="btn small blue" id="copySecretBtn" type="button">复制答案</button>
                 </div>
               </div>
-              <div class="secret-box opponent-feedback-box">
-                <h3>对手反馈</h3>
-                <p>把你的秘密数字和对手猜的数字填进来，军师会按正位规则告诉你命中几个。</p>
-                <div class="settings-grid">
-                  <div class="field">
-                    <label for="hostSecretInput">我的秘密数字</label>
-                    <input id="hostSecretInput" type="password" inputmode="numeric" autocomplete="off" placeholder="例如 02758">
-                  </div>
-                  <div class="field">
-                    <label for="opponentGuessInput">对手猜测</label>
-                    <input id="opponentGuessInput" inputmode="numeric" autocomplete="off" placeholder="输入对手猜的数字">
-                  </div>
-                </div>
-                <div class="model-tools">
-                  <button class="btn small blue" id="useHardSecretAsHostBtn" type="button">使用上方难题</button>
-                  <button class="btn small primary" id="scoreOpponentGuessBtn" type="button">计算反馈</button>
-                  <button class="btn small" id="copyOpponentFeedbackBtn" type="button">复制反馈</button>
-                </div>
-                <div class="coach-box" id="opponentFeedbackResult">等待录入对手猜测。</div>
-              </div>
             </div>
-            <details class="paper-card" id="apiDetails" style="margin-top:12px">
-              <summary>军师模型设置</summary>
-              <div class="details-body">
-                <p>Key 只保存在当前浏览器会话，不写入源码。AI推演只代表真实外部模型请求；本地出牌是独立兜底。</p>
-                <div class="settings-grid">
-                  <div class="field">
-                    <label for="apiKeyInput">API Key</label>
-                    <input id="apiKeyInput" type="password" autocomplete="off" placeholder="sk-...">
-                  </div>
-                  <div class="field">
-                    <label for="apiUrlInput">Base URL</label>
-                    <input id="apiUrlInput" type="url" value="https://maoapi.org/v1/chat/completions">
-                  </div>
-                  <div class="field">
-                    <label for="modelSelect">军师模型</label>
-                    <select id="modelSelect">
-                      <option value="auto">自动推荐</option>
-                    </select>
-                  </div>
-                  <div class="field" id="customModelField">
-                    <label for="customModelInput">自定义模型</label>
-                    <input id="customModelInput" type="text" placeholder="输入模型名">
-                  </div>
-                </div>
-                <div class="model-status" id="modelStatus">未设置 API Key 时使用本地军师；保存 Key 后会自动拉取模型。</div>
-                <div class="model-tools">
-                  <button class="btn small blue" id="saveApiBtn" type="button">保存并自动拉取</button>
-                  <button class="btn small" id="refreshModelsBtn" type="button">刷新模型列表</button>
-                  <button class="btn small primary" id="testModelBtn" type="button">测试模型</button>
-                </div>
-              </div>
-            </details>
           </div>
 
           <div id="pkSetupPanel" class="hidden">
@@ -1743,8 +2202,54 @@
               <div class="metric"><span>状态</span><strong id="metricState">待命</strong></div>
               <div class="metric"><span>AI</span><strong id="metricAi">关闭</strong></div>
             </div>
+            <div class="endgame-panel" id="endgamePanel">
+              <div class="endgame-head">
+                <strong>强力收尾</strong>
+                <span id="endgameAiState">本地待命</span>
+              </div>
+              <div class="endgame-grid">
+                <div><span>本地建议</span><strong id="endgameGuess">-</strong></div>
+                <div><span>期望剩余</span><strong id="endgameExpected">-</strong></div>
+                <div><span>最坏剩余</span><strong id="endgameWorst">-</strong></div>
+                <div><span>直接命中</span><strong id="endgameSolveChance">-</strong></div>
+              </div>
+              <div class="endgame-reason" id="endgameReason">候选降到 100 内后启用强力收尾。</div>
+              <div class="candidate-list" id="endgameAlternatives"></div>
+            </div>
             <div class="badge-list" id="badgeList"></div>
             <div class="candidate-list" id="candidateList"></div>
+            <details class="side-details" id="apiDetails">
+              <summary>军师模型设置</summary>
+              <div class="details-body">
+                <p>Key 只保存在当前浏览器会话，不写入源码。候选 100 内会自动做 AI 复核，本地建议始终可用。</p>
+                <div class="settings-grid">
+                  <div class="field">
+                    <label for="apiKeyInput">API Key</label>
+                    <input id="apiKeyInput" type="password" autocomplete="off" placeholder="sk-...">
+                  </div>
+                  <div class="field">
+                    <label for="apiUrlInput">Base URL</label>
+                    <input id="apiUrlInput" type="url" value="https://maoapi.org/v1/chat/completions">
+                  </div>
+                  <div class="field">
+                    <label for="modelSelect">军师模型</label>
+                    <select id="modelSelect">
+                      <option value="auto">自动推荐</option>
+                    </select>
+                  </div>
+                  <div class="field" id="customModelField">
+                    <label for="customModelInput">自定义模型</label>
+                    <input id="customModelInput" type="text" placeholder="输入模型名">
+                  </div>
+                </div>
+                <div class="model-status" id="modelStatus">未设置 API Key 时使用本地军师；保存 Key 后会自动拉取模型。</div>
+                <div class="model-tools">
+                  <button class="btn small blue" id="saveApiBtn" type="button">保存并自动拉取</button>
+                  <button class="btn small" id="refreshModelsBtn" type="button">刷新模型列表</button>
+                  <button class="btn small primary" id="testModelBtn" type="button">测试模型</button>
+                </div>
+              </div>
+            </details>
           </section>
 
           <section class="panel pad">
@@ -1810,6 +2315,9 @@
       "gpt-5.4", "claude-sonnet-4-6", "deepseek-v4-flash",
       "gpt-5.4-mini", "gpt-5.4-nano", "claude-haiku-4-5"
     ];
+    const ENDGAME_LIMIT = 100;
+    const TWO_STEP_LIMIT = 50;
+    const AI_REVIEW_TIMEOUT_MS = 8500;
 
     const state = {
       screen: "home",
@@ -1828,6 +2336,8 @@
       advisorRole: "guess",
       hardSecret: { value: "", visible: false, tags: [], score: 0 },
       opponentFeedback: { secret: "", guess: "", hits: null },
+      lastSuggestion: null,
+      aiReview: { key: "", status: "idle", guess: "", reason: "", error: "" },
       conflictIndex: -1,
       lastResult: null,
       aiTrace: [
@@ -1939,6 +2449,14 @@
       metricBest: document.getElementById("metricBest"),
       metricState: document.getElementById("metricState"),
       metricAi: document.getElementById("metricAi"),
+      endgamePanel: document.getElementById("endgamePanel"),
+      endgameAiState: document.getElementById("endgameAiState"),
+      endgameGuess: document.getElementById("endgameGuess"),
+      endgameExpected: document.getElementById("endgameExpected"),
+      endgameWorst: document.getElementById("endgameWorst"),
+      endgameSolveChance: document.getElementById("endgameSolveChance"),
+      endgameReason: document.getElementById("endgameReason"),
+      endgameAlternatives: document.getElementById("endgameAlternatives"),
       badgeList: document.getElementById("badgeList"),
       candidateList: document.getElementById("candidateList"),
       historyTitle: document.getElementById("historyTitle"),
@@ -2086,7 +2604,7 @@
       return history.length - 1;
     }
 
-    function recalcAdvisor() {
+    function recalcAdvisor({ autoReview = true } = {}) {
       let candidates = makeCandidates(state.length);
       state.history = state.history.map(item => {
         const before = candidates.length;
@@ -2095,7 +2613,7 @@
       });
       state.candidates = candidates;
       state.conflictIndex = detectConflictRound();
-      state.currentGuess = state.candidates.length ? localSuggestion() : "?".repeat(state.length);
+      refreshAdvisorSuggestion({ autoReview });
     }
 
     function buildShareSummary() {
@@ -2175,6 +2693,7 @@
         state.modelDiscovery = { status: "idle", models: [], message: "未设置 API Key，当前使用本地军师。" };
         renderApiFields();
       }
+      if (state.mode === "advisor" && state.advisorRole === "guess") refreshAdvisorSuggestion();
       render();
     }
 
@@ -2360,26 +2879,33 @@
       );
     }
 
+    function hashText(text) {
+      let hash = 2166136261;
+      for (const ch of String(text)) hash = Math.imul(hash ^ ch.charCodeAt(0), 16777619);
+      return hash >>> 0;
+    }
+
+    function contextKey() {
+      return `${state.length}|${state.candidates.length}|${state.history.map(item => `${item.guess}:${item.hits}`).join(",")}`;
+    }
+
     function sample(list, limit) {
-      if (list.length <= limit) return list;
-      const start = secureRandomInt(Math.max(1, Math.floor(list.length / limit)));
+      return stableSample(list, limit, `sample|${contextKey()}`);
+    }
+
+    function stableSample(list, limit, seedText = contextKey()) {
+      if (list.length <= limit) return [...list];
       const step = Math.max(1, Math.floor(list.length / limit));
+      const offset = hashText(seedText) % step;
       const out = [];
-      for (let i = start; i < list.length && out.length < limit; i += step) out.push(list[i]);
+      for (let i = offset; i < list.length && out.length < limit; i += step) out.push(list[i]);
       return out;
     }
 
-    function randomSample(list, limit) {
-      if (list.length <= limit) return [...list];
-      const picked = new Set();
-      while (picked.size < limit) picked.add(list[secureRandomInt(list.length)]);
-      return [...picked];
-    }
-
     function openingCandidates(length = state.length) {
-      if (length === 4) return ["0123", "4567", "8901", randomAnswer(length)];
-      if (length === 5) return ["01234", "56789", "02468", "13579", randomAnswer(length)];
-      return ["012345", "456789", "024680", "135791", randomAnswer(length)];
+      if (length === 4) return ["0123", "4567", "8901", "2580", "3691"];
+      if (length === 5) return ["01234", "56789", "02468", "13579", "90817", "36425"];
+      return ["012345", "456789", "024680", "135791", "908172", "364250"];
     }
 
     function profile(guess, candidates) {
@@ -2392,58 +2918,214 @@
         return sum - probability * Math.log2(probability);
       }, 0);
       return {
+        buckets,
         worst: Math.max(...buckets),
+        expected: buckets.reduce((sum, count) => sum + count * count, 0) / total,
         weighted: buckets.reduce((sum, count) => sum + count * count, 0),
         entropy
       };
     }
 
-    function localSuggestion() {
-      if (state.candidates.length === 0) return "?".repeat(state.length);
-      if (state.candidates.length === 1) return state.candidates[0];
-      const cacheKey = `${state.length}|${state.candidates.length}|${state.history.map(item => `${item.guess}:${item.hits}`).join(",")}`;
-      if (suggestionCache.has(cacheKey)) return suggestionCache.get(cacheKey);
+    function isConsistentGuess(guess) {
+      return isValidNumber(guess) && state.history.every(item => scoreGuess(item.guess, guess) === item.hits);
+    }
 
-      const full = state.candidates.length <= (state.length === 6 ? 850 : 1400);
-      const evalSet = full ? state.candidates : randomSample(state.candidates, state.length === 6 ? 1500 : 2600);
-      const pool = state.history.length === 0
-        ? openingCandidates(state.length)
-        : (full ? state.candidates : [...randomSample(state.candidates, state.length === 6 ? 1200 : 2200), ...openingCandidates(state.length)]);
-      let best = state.candidates[0];
-      let bestScore = { worst: Infinity, weighted: Infinity, entropy: -Infinity };
-      for (const guess of [...new Set(pool)]) {
-        if (!isValidNumber(guess) || !state.history.every(item => scoreGuess(item.guess, guess) === item.hits)) continue;
-        const p = profile(guess, evalSet);
-        if (
-          p.worst < bestScore.worst ||
-          (p.worst === bestScore.worst && p.weighted < bestScore.weighted) ||
-          (p.worst === bestScore.worst && p.weighted === bestScore.weighted && p.entropy > bestScore.entropy)
-        ) {
-          best = guess;
-          bestScore = p;
+    function generatedProbeGuesses(candidates, limit = 36) {
+      const probes = new Set(openingCandidates(state.length));
+      for (const digit of DIGITS) probes.add(digit.repeat(state.length));
+      if (candidates.length) {
+        const columns = Array.from({ length: state.length }, () => new Map());
+        candidates.forEach(candidate => {
+          [...candidate].forEach((digit, index) => columns[index].set(digit, (columns[index].get(digit) || 0) + 1));
+        });
+        const common = columns.map(map => [...map.entries()].sort((a, b) => b[1] - a[1]).map(([digit]) => digit));
+        const least = columns.map(map => [...map.entries()].sort((a, b) => a[1] - b[1]).map(([digit]) => digit));
+        for (let offset = 0; offset < Math.min(5, state.length + 1); offset += 1) {
+          probes.add(common.map((digits, index) => digits[(index + offset) % Math.max(1, digits.length)] || DIGITS[(index + offset) % 10]).join(""));
+          probes.add(least.map((digits, index) => digits[(index + offset) % Math.max(1, digits.length)] || DIGITS[(9 - index - offset + 10) % 10]).join(""));
         }
       }
+      const patterns = [
+        DIGITS.slice(0, state.length),
+        DIGITS.slice(10 - state.length),
+        "024680".slice(0, state.length),
+        "135791".slice(0, state.length),
+        "987654".slice(0, state.length),
+        "012345".slice(0, state.length)
+      ];
+      patterns.forEach(item => probes.add(item.padEnd(state.length, item[item.length - 1] || "0").slice(0, state.length)));
+      return [...probes].filter(isValidNumber).slice(0, limit);
+    }
+
+    function scoreGuessOption(guess, candidates, options = {}) {
+      const p = profile(guess, candidates);
+      const actualCandidates = options.actualCandidates || candidates;
+      const candidateHit = actualCandidates.includes(guess);
+      const solveChance = candidateHit ? 1 / Math.max(1, actualCandidates.length) : 0;
+      const expectedAfterOne = p.expected;
+      let lookahead = expectedAfterOne;
+      if (options.twoStep && candidates.length <= TWO_STEP_LIMIT) {
+        let weightedNext = 0;
+        p.buckets.forEach((count, hits) => {
+          if (!count) return;
+          const subset = candidates.filter(candidate => scoreGuess(guess, candidate) === hits);
+          if (subset.length <= 1) {
+            weightedNext += count * subset.length;
+          } else {
+            const pool = [...new Set([...subset, ...generatedProbeGuesses(subset, 18)])].filter(item => isValidNumber(item));
+            let bestExpected = subset.length;
+            pool.forEach(nextGuess => {
+              const nextProfile = profile(nextGuess, subset);
+              bestExpected = Math.min(bestExpected, nextProfile.expected);
+            });
+            weightedNext += count * bestExpected;
+          }
+        });
+        lookahead = weightedNext / Math.max(1, candidates.length);
+      }
+      return {
+        guess,
+        source: candidateHit ? "candidate" : "probe",
+        expectedRemaining: expectedAfterOne,
+        lookaheadRemaining: lookahead,
+        worstRemaining: p.worst,
+        entropy: p.entropy,
+        solveChance,
+        eliminationRate: candidates.length ? Math.max(0, 1 - expectedAfterOne / candidates.length) : 0,
+        reason: ""
+      };
+    }
+
+    function compareSuggestion(a, b) {
+      if (!b) return true;
+      if (a.worstRemaining !== b.worstRemaining) return a.worstRemaining < b.worstRemaining;
+      if (Math.abs(a.lookaheadRemaining - b.lookaheadRemaining) > .001) return a.lookaheadRemaining < b.lookaheadRemaining;
+      if (Math.abs(a.expectedRemaining - b.expectedRemaining) > .001) return a.expectedRemaining < b.expectedRemaining;
+      if (Math.abs(a.entropy - b.entropy) > .001) return a.entropy > b.entropy;
+      if (a.source !== b.source) return a.source === "candidate";
+      return a.solveChance > b.solveChance;
+    }
+
+    function describeSuggestion(item, candidateCount) {
+      if (!item) return "等待候选收缩后启动。";
+      if (candidateCount === 1) return "候选唯一，直接收工。";
+      if (candidateCount <= TWO_STEP_LIMIT) return `${item.source === "probe" ? "探针" : "候选"}出牌，两步收尾评估优先压低最坏分支。`;
+      if (candidateCount <= ENDGAME_LIMIT) return `${item.source === "probe" ? "探针" : "候选"}出牌，全量评估 ${candidateCount} 个候选。`;
+      return "稳定采样评估最大风险、期望剩余和信息熵。";
+    }
+
+    function localSuggestionDetails() {
+      if (state.candidates.length === 0) {
+        return { guess: "?".repeat(state.length), source: "conflict", expectedRemaining: 0, lookaheadRemaining: 0, worstRemaining: 0, eliminationRate: 0, solveChance: 0, alternatives: [], reason: "反馈冲突，没有合法候选。" };
+      }
+      if (state.candidates.length === 1) {
+        return { guess: state.candidates[0], source: "unique", expectedRemaining: 1, lookaheadRemaining: 1, worstRemaining: 1, eliminationRate: 1, solveChance: 1, alternatives: [], reason: "候选唯一，直接出答案。" };
+      }
+      const cacheKey = `detail|${contextKey()}`;
+      if (suggestionCache.has(cacheKey)) return suggestionCache.get(cacheKey);
+
+      const endgame = state.candidates.length <= ENDGAME_LIMIT;
+      const full = endgame || state.candidates.length <= (state.length === 6 ? 850 : 1400);
+      const evalSet = full ? state.candidates : stableSample(state.candidates, state.length === 6 ? 1500 : 2600, `eval|${contextKey()}`);
+      const sampledCandidates = stableSample(state.candidates, state.length === 6 ? 1200 : 2200, `pool|${contextKey()}`);
+      const pool = state.history.length === 0
+        ? openingCandidates(state.length)
+        : (endgame
+          ? [...state.candidates, ...generatedProbeGuesses(state.candidates, state.length === 6 ? 80 : 60)]
+          : (full ? state.candidates : [...sampledCandidates, ...openingCandidates(state.length), ...generatedProbeGuesses(sampledCandidates, 24)]));
+      const scored = [];
+      for (const guess of [...new Set(pool)]) {
+        if (!isValidNumber(guess)) continue;
+        if (!endgame && !isConsistentGuess(guess)) continue;
+        const item = scoreGuessOption(guess, evalSet, { actualCandidates: state.candidates, twoStep: endgame && state.candidates.length <= TWO_STEP_LIMIT });
+        item.reason = describeSuggestion(item, state.candidates.length);
+        scored.push(item);
+      }
+      scored.sort((a, b) => compareSuggestion(a, b) ? -1 : (compareSuggestion(b, a) ? 1 : 0));
+      const best = scored[0] || scoreGuessOption(state.candidates[0], evalSet, { actualCandidates: state.candidates });
+      best.reason = describeSuggestion(best, state.candidates.length);
+      best.alternatives = scored.slice(1, 4).map(item => ({ guess: item.guess, expectedRemaining: item.expectedRemaining, lookaheadRemaining: item.lookaheadRemaining, worstRemaining: item.worstRemaining, source: item.source }));
       suggestionCache.set(cacheKey, best);
       if (suggestionCache.size > 80) suggestionCache.delete(suggestionCache.keys().next().value);
       return best;
     }
 
-    function apiPayload(fallback) {
+    function localSuggestion() {
+      const details = localSuggestionDetails();
+      state.lastSuggestion = details;
+      return details.guess;
+    }
+
+    function refreshAdvisorSuggestion({ autoReview = true } = {}) {
+      if (state.mode !== "advisor" || state.solved) return;
+      if (state.candidates.length === 0) {
+        state.lastSuggestion = localSuggestionDetails();
+        state.currentGuess = "?".repeat(state.length);
+        state.aiReview = { key: contextKey(), status: "conflict", guess: "", reason: "", error: "" };
+        return;
+      }
+      const details = localSuggestionDetails();
+      state.lastSuggestion = details;
+      state.currentGuess = details.guess;
+      if (state.candidates.length > ENDGAME_LIMIT) {
+        state.aiReview = { key: contextKey(), status: "idle", guess: "", reason: "", error: "" };
+      }
+      if (autoReview) maybeAutoAiReview();
+    }
+
+    function currentSuggestionSummary() {
+      const details = state.lastSuggestion || localSuggestionDetails();
+      return {
+        guess: details.guess,
+        source: details.source,
+        expectedRemaining: Number(details.expectedRemaining || 0).toFixed(2),
+        worstRemaining: details.worstRemaining,
+        solveChance: `${Math.round((details.solveChance || 0) * 100)}%`,
+        alternatives: (details.alternatives || []).map(item => ({
+          guess: item.guess,
+          source: item.source,
+          expectedRemaining: Number(item.expectedRemaining || 0).toFixed(2),
+          worstRemaining: item.worstRemaining
+        }))
+      };
+    }
+
+    function sourceLabel(source) {
+      const labels = {
+        candidate: "候选",
+        probe: "探针",
+        unique: "唯一",
+        conflict: "冲突"
+      };
+      return labels[source] || "本地";
+    }
+
+    function compactNumber(value) {
+      if (!Number.isFinite(Number(value))) return "-";
+      const number = Number(value);
+      return number >= 10 ? String(Math.round(number)) : number.toFixed(1);
+    }
+
+    function apiPayload(fallback, mode = "manual") {
+      const details = state.lastSuggestion || localSuggestionDetails();
+      const fullCandidates = state.candidates.length <= ENDGAME_LIMIT ? state.candidates : sample(state.candidates, 40);
       return {
         model: activeModel(),
         messages: [
           {
             role: "system",
-            content: "You are a strategist for a positional number guessing game. Return strict JSON only. Digits are 0-9, repeats and leading zeroes are allowed. Feedback counts exact position matches only."
+            content: "You are a strategist for a positional number guessing game. Return strict JSON only. Digits are 0-9, repeats and leading zeroes are allowed. Feedback counts exact position matches only. You do not know the answer; choose the next guess that minimizes future rounds."
           },
           {
             role: "user",
             content: JSON.stringify({
+              mode,
               digitLength: state.length,
               history: state.history.map(({ guess, hits }) => ({ guess, hits })),
               remainingCandidates: state.candidates.length,
-              candidateSample: sample(state.candidates, 40),
+              candidates: fullCandidates,
               localFallbackGuess: fallback,
+              localSuggestion: currentSuggestionSummary(),
               responseShape: { guess: "digits", reason: "short Chinese reason", confidence: "low|medium|high" }
             })
           }
@@ -2457,9 +3139,68 @@
       const jsonText = raw.startsWith("{") ? raw : (raw.match(/\{[\s\S]*\}/) || [""])[0];
       const data = JSON.parse(jsonText);
       const guess = String(data.guess || "").trim();
-      if (!isValidNumber(guess)) throw new Error("bad guess");
-      if (!state.history.every(item => scoreGuess(item.guess, guess) === item.hits)) throw new Error("model guess conflicts with history");
-      return { guess, reason: String(data.reason || "外部军师给出建议。") };
+      if (!isValidNumber(guess)) throw new Error("模型返回的数字格式不合法");
+      const isCandidate = state.candidates.includes(guess);
+      if (!isCandidate && state.candidates.length) {
+        const probeProfile = profile(guess, state.candidates);
+        if (probeProfile.worst >= state.candidates.length) throw new Error("模型探针无法有效切分候选");
+      }
+      return { guess, source: isCandidate ? "candidate" : "probe", reason: String(data.reason || "外部军师给出建议。") };
+    }
+
+    async function requestAiSuggestion({ automatic = false } = {}) {
+      saveApiQuietly();
+      if (!state.api.key) throw new Error("missing api key");
+      const fallback = localSuggestion();
+      const model = activeModel();
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), AI_REVIEW_TIMEOUT_MS);
+      try {
+        const res = await fetch(state.api.url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${state.api.key}`
+          },
+          body: JSON.stringify(apiPayload(fallback, automatic ? "auto-endgame-review" : "manual")),
+          signal: controller.signal
+        });
+        if (!res.ok) throw new Error(`API ${res.status}`);
+        const json = await res.json();
+        const content = json.choices?.[0]?.message?.content || json.choices?.[0]?.text || "";
+        const ai = parseAi(content);
+        return { ...ai, model };
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    function maybeAutoAiReview() {
+      if (state.mode !== "advisor" || state.advisorRole !== "guess" || state.solved || state.candidates.length === 0 || state.candidates.length > ENDGAME_LIMIT) return;
+      saveApiQuietly();
+      const key = contextKey();
+      if (!state.api.key) {
+        state.aiReview = { key, status: "local-only", guess: "", reason: "", error: "" };
+        return;
+      }
+      if (state.aiReview.key === key && ["loading", "done", "invalid"].includes(state.aiReview.status)) return;
+      state.aiReview = { key, status: "loading", guess: "", reason: "", error: "" };
+      renderEndgame();
+      requestAiSuggestion({ automatic: true })
+        .then(ai => {
+          if (state.aiReview.key !== key) return;
+          state.aiReview = { key, status: "done", guess: ai.guess, reason: `${ai.model}：${ai.reason}`, error: "" };
+          if (ai.guess && ai.guess !== state.currentGuess) {
+            state.currentGuess = ai.guess;
+            setAiTrace([{ state: "done", mark: "AI", text: `候选 ${state.candidates.length} 内自动复核，外部模型建议 ${ai.guess}。本地建议仍保留在右侧。` }]);
+          }
+          render();
+        })
+        .catch(error => {
+          if (state.aiReview.key !== key) return;
+          state.aiReview = { key, status: "invalid", guess: "", reason: "", error: error.message || "AI 复核失败" };
+          renderEndgame();
+        });
     }
 
     function setAiTrace(steps) {
@@ -2490,35 +3231,25 @@
         setStatus("AI推演需要真实外部模型 Key。未调用本地算法。", "error");
         return;
       }
-      const fallback = localSuggestion();
       const model = activeModel();
       const started = performance.now();
+      const local = state.lastSuggestion || localSuggestionDetails();
+      state.lastSuggestion = local;
       state.thinking = true;
       setAiTrace([
-        { state: "done", mark: "1", text: `整理上下文：${state.history.length} 轮战报，剩余 ${state.candidates.length} 个候选，抽样 ${Math.min(state.candidates.length, 40)} 个候选给模型。` },
+        { state: "done", mark: "1", text: `整理上下文：${state.history.length} 轮战报，剩余 ${state.candidates.length} 个候选，本地先给 ${local.guess}。` },
         { state: "pending", mark: "2", text: `请求外部模型：${model}。` },
         { state: "pending", mark: "3", text: "等待模型返回严格 JSON：guess / reason / confidence。" }
       ]);
       setStatus(`正在请求外部模型 ${model} 推演...`);
       render();
       try {
-        const payload = apiPayload(fallback);
-        const res = await fetch(state.api.url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${state.api.key}`
-          },
-          body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error(`API ${res.status}`);
+        const ai = await requestAiSuggestion({ automatic: false });
         updateAiTrace(1, { state: "done", text: `外部模型 ${model} 已响应，用时 ${((performance.now() - started) / 1000).toFixed(1)} 秒。` });
-        const json = await res.json();
-        const content = json.choices?.[0]?.message?.content || json.choices?.[0]?.text || "";
-        const ai = parseAi(content);
         updateAiTrace(2, { state: "done", text: `解析成功：模型建议 ${ai.guess}。理由：${ai.reason}` });
         pushAiTrace({ state: "done", mark: "4", text: "已把外部模型结果写入行动卡。下一步把这串数字告诉对手，再录入反馈。" });
         state.currentGuess = ai.guess;
+        state.aiReview = { key: contextKey(), status: "done", guess: ai.guess, reason: `${ai.model}：${ai.reason}`, error: "" };
         setStatus(`外部模型 ${model} 出牌 ${ai.guess}：${ai.reason}`);
       } catch (error) {
         pushAiTrace({ state: "error", mark: "!", text: `外部模型推演失败：${error.message || "请求失败"}。没有自动使用本地算法。` });
@@ -2595,6 +3326,8 @@
       state.thinking = false;
       state.conflictIndex = -1;
       state.lastResult = null;
+      state.lastSuggestion = null;
+      state.aiReview = { key: "", status: "idle", guess: "", reason: "", error: "" };
       state.opponentFeedback = { secret: "", guess: "", hits: null };
       if (!options.daily) state.dailyChallenge = "";
       state.aiTrace = [
@@ -2621,7 +3354,7 @@
       startTimer();
       if (state.mode === "practice") setStatus(options.daily ? "今日天机开局。今天同位数答案固定。" : "演武场开局。输入数字，打一张猜测牌。");
       if (state.mode === "advisor") {
-        state.currentGuess = localSuggestion();
+        refreshAdvisorSuggestion();
         setStatus("军师营开局。先报出行动卡，再填对手反馈。");
       }
       if (state.mode === "pk") setStatus("对弈场开局。双方先输入秘密数字。");
@@ -2682,10 +3415,12 @@
         });
       } else if (state.candidates.length === 0) {
         state.currentGuess = "?".repeat(state.length);
+        state.lastSuggestion = localSuggestionDetails();
+        state.aiReview = { key: contextKey(), status: "conflict", guess: "", reason: "", error: "" };
         state.conflictIndex = detectConflictRound();
         setStatus("反馈冲突：没有任何候选满足战报。撤销上一轮核对。", "error");
       } else {
-        state.currentGuess = localSuggestion();
+        refreshAdvisorSuggestion();
         setStatus(`反馈 ${hits}/${state.length} 已记录，剩余 ${state.candidates.length} 张候选牌。`);
       }
       render();
@@ -2697,9 +3432,9 @@
         return;
       }
       state.history.pop();
-      recalcAdvisor();
       state.solved = false;
       state.lastResult = null;
+      recalcAdvisor();
       setStatus("已撤销上一轮。");
       render();
     }
@@ -2712,10 +3447,10 @@
         return;
       }
       state.history.push({ actor: "补录", guess, hits, before: state.candidates.length });
-      recalcAdvisor();
+      recalcAdvisor({ autoReview: hits !== state.length });
       els.manualGuessInput.value = "";
       els.manualHitsInput.value = "";
-      state.solved = hits === state.length;
+      state.solved = hits === state.length && state.candidates.length > 0;
       if (state.solved) {
         clearInterval(timer);
         saveRecord();
@@ -2744,9 +3479,9 @@
       const last = state.history.pop();
       els.manualGuessInput.value = last.guess;
       els.manualHitsInput.value = String(last.hits);
-      recalcAdvisor();
       state.solved = false;
       state.lastResult = null;
+      recalcAdvisor();
       setStatus("上一轮已放回补录区，改好命中数后点补录战报。");
       render();
     }
@@ -2756,7 +3491,7 @@
         setStatus("反馈冲突，先核对战报。", "error");
         return;
       }
-      state.currentGuess = localSuggestion();
+      refreshAdvisorSuggestion({ autoReview: false });
       setAiTrace([
         { state: "done", mark: "本", text: `本地算法出牌 ${state.currentGuess}。这不是外部模型推演，未发送 API 请求。` }
       ]);
@@ -3234,12 +3969,20 @@
     function generateHardSecretPreview() {
       let best = randomAnswer();
       let bestInfo = scoreSecretDifficulty(best);
+      let ties = 1;
       for (let i = 0; i < 60; i += 1) {
         const candidate = randomAnswer();
         const info = scoreSecretDifficulty(candidate);
         if (info.score > bestInfo.score) {
           best = candidate;
           bestInfo = info;
+          ties = 1;
+        } else if (info.score === bestInfo.score) {
+          ties += 1;
+          if (secureRandomInt(ties) === 0) {
+            best = candidate;
+            bestInfo = info;
+          }
         }
       }
       return best;
@@ -3254,6 +3997,51 @@
         row.className = `trace-step ${step.state || "pending"}`;
         row.innerHTML = `<span>${escapeHtml(step.mark || "•")}</span><div>${escapeHtml(step.text || "")}</div>`;
         els.aiTraceSteps.appendChild(row);
+      });
+    }
+
+    function renderEndgame() {
+      if (!els.endgamePanel) return;
+      const active = state.mode === "advisor" && state.advisorRole === "guess";
+      els.endgamePanel.classList.toggle("hidden", !active);
+      if (!active) return;
+
+      const details = state.lastSuggestion || localSuggestionDetails();
+      state.lastSuggestion = details;
+      const count = state.candidates.length;
+      const review = state.aiReview || { status: "idle" };
+      const reviewLabels = {
+        idle: count <= ENDGAME_LIMIT ? "等待复核" : "候选过多",
+        "local-only": "本地收尾",
+        loading: "AI复核中",
+        done: review.guess ? `AI ${review.guess}` : "AI已复核",
+        invalid: "AI未采纳",
+        conflict: "反馈冲突"
+      };
+
+      els.endgameAiState.textContent = reviewLabels[review.status] || "本地待命";
+      els.endgameGuess.textContent = details.guess || "-";
+      els.endgameExpected.textContent = compactNumber(details.lookaheadRemaining ?? details.expectedRemaining);
+      els.endgameWorst.textContent = Number.isFinite(Number(details.worstRemaining)) ? String(Math.round(Number(details.worstRemaining))) : "-";
+      els.endgameSolveChance.textContent = `${Math.round((details.solveChance || 0) * 100)}%`;
+
+      const parts = [
+        `剩余 ${count} 个候选，${sourceLabel(details.source)}出牌 ${details.guess}。`,
+        details.reason
+      ];
+      if (count <= ENDGAME_LIMIT && !state.api.key) parts.push("未保存 API Key，当前只用本地强力收尾。");
+      if (review.status === "loading") parts.push("外部 AI 正在后台复核，本地建议可先用。");
+      if (review.status === "done" && review.reason) parts.push(`AI复核：${review.reason}`);
+      if (review.status === "invalid" && review.error) parts.push(`AI结果未采纳：${review.error}。`);
+      if (count <= 12 && count > 1) parts.push(`完整候选：${state.candidates.join("、")}`);
+      els.endgameReason.textContent = parts.filter(Boolean).join(" ");
+
+      els.endgameAlternatives.innerHTML = "";
+      (details.alternatives || []).forEach(item => {
+        const chip = document.createElement("span");
+        chip.className = "candidate-chip";
+        chip.textContent = `${item.guess} ${sourceLabel(item.source)} 期望${compactNumber(item.lookaheadRemaining ?? item.expectedRemaining)} 最坏${Math.round(Number(item.worstRemaining) || 0)}`;
+        els.endgameAlternatives.appendChild(chip);
       });
     }
 
@@ -3296,6 +4084,7 @@
       renderHistory();
       renderHardSecret();
       renderOpponentFeedback();
+      renderEndgame();
       renderAiTrace();
       renderConflictCoach();
       renderSettlement();
