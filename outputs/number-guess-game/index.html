@@ -2415,15 +2415,15 @@
             <details class="side-details" id="apiDetails">
               <summary>军师模型设置</summary>
               <div class="details-body">
-                <p>Key 只保存在当前浏览器会话，不写入源码。候选 100 内会自动做 AI 复核，本地建议始终可用。</p>
+                <p>Key 只保存在当前浏览器会话，不写入源码。接口地址可填 /v1 或完整 /v1/chat/completions。</p>
                 <div class="settings-grid">
                   <div class="field">
                     <label for="apiKeyInput">API Key</label>
                     <input id="apiKeyInput" type="password" autocomplete="off" placeholder="sk-...">
                   </div>
                   <div class="field">
-                    <label for="apiUrlInput">Base URL</label>
-                    <input id="apiUrlInput" type="url" value="https://maoapi.org/v1/chat/completions">
+                    <label for="apiUrlInput">接口地址</label>
+                    <input id="apiUrlInput" type="url" value="https://maoapi.org/v1/chat/completions" placeholder="https://example.com/v1 或 /v1/chat/completions">
                   </div>
                   <div class="field">
                     <label for="modelSelect">军师模型</label>
@@ -2882,9 +2882,10 @@
     }
 
     function collectApiFields() {
+      const url = chatCompletionsUrl(els.apiUrlInput.value.trim() || DEFAULT_API_URL);
       return {
         key: els.apiKeyInput.value.trim(),
-        url: els.apiUrlInput.value.trim() || DEFAULT_API_URL,
+        url,
         model: els.modelSelect.value,
         customModel: els.customModelInput.value.trim()
       };
@@ -2906,10 +2907,11 @@
     function saveApiQuietly() {
       state.api = {
         key: els.apiKeyInput.value.trim(),
-        url: els.apiUrlInput.value.trim() || DEFAULT_API_URL,
+        url: chatCompletionsUrl(els.apiUrlInput.value.trim() || DEFAULT_API_URL),
         model: els.modelSelect.value,
         customModel: els.customModelInput.value.trim()
       };
+      els.apiUrlInput.value = state.api.url;
       sessionStorage.setItem(API_KEY, JSON.stringify(state.api));
     }
 
@@ -2941,16 +2943,56 @@
       return { id, label: id, provider: detectProvider(id), rank: modelRank(id) };
     }
 
-    function modelListUrl(url) {
+    function normalizeApiUrl(url, target = "chat") {
       try {
         const parsed = new URL(url || DEFAULT_API_URL);
-        parsed.pathname = parsed.pathname.replace(/\/chat\/completions\/?$/, "/models").replace(/\/completions\/?$/, "/models");
-        if (!parsed.pathname.endsWith("/models")) parsed.pathname = "/v1/models";
+        const cleanPath = parsed.pathname.replace(/\/+$/, "");
+        if (target === "models") {
+          if (/\/v\d+\/chat\/completions$/i.test(cleanPath)) parsed.pathname = cleanPath.replace(/\/chat\/completions$/i, "/models");
+          else if (/\/chat\/completions$/i.test(cleanPath)) parsed.pathname = cleanPath.replace(/\/chat\/completions$/i, "/models");
+          else if (/\/v\d+\/completions$/i.test(cleanPath)) parsed.pathname = cleanPath.replace(/\/completions$/i, "/models");
+          else if (/\/completions$/i.test(cleanPath)) parsed.pathname = cleanPath.replace(/\/completions$/i, "/models");
+          else if (/\/v\d+$/i.test(cleanPath)) parsed.pathname = `${cleanPath}/models`;
+          else if (/\/models$/i.test(cleanPath)) parsed.pathname = cleanPath;
+          else parsed.pathname = `${cleanPath || "/v1"}/models`;
+        } else {
+          if (/\/v\d+\/chat\/completions$/i.test(cleanPath) || /\/chat\/completions$/i.test(cleanPath)) parsed.pathname = cleanPath;
+          else if (/\/v\d+\/completions$/i.test(cleanPath)) parsed.pathname = cleanPath.replace(/\/completions$/i, "/chat/completions");
+          else if (/\/completions$/i.test(cleanPath)) parsed.pathname = cleanPath.replace(/\/completions$/i, "/chat/completions");
+          else if (/\/v\d+$/i.test(cleanPath)) parsed.pathname = `${cleanPath}/chat/completions`;
+          else if (/\/models$/i.test(cleanPath)) parsed.pathname = cleanPath.replace(/\/models$/i, "/chat/completions");
+          else parsed.pathname = `${cleanPath || "/v1"}/chat/completions`;
+        }
         parsed.search = "";
         return parsed.toString();
       } catch {
-        return "https://maoapi.org/v1/models";
+        return target === "models" ? "https://maoapi.org/v1/models" : DEFAULT_API_URL;
       }
+    }
+
+    function chatCompletionsUrl(url) {
+      return normalizeApiUrl(url, "chat");
+    }
+
+    function modelListUrl(url) {
+      return normalizeApiUrl(url, "models");
+    }
+
+    function describeApiError(error, context = "请求") {
+      const message = String(error?.message || error || "");
+      if (error?.name === "AbortError") return `${context}超时。中转站响应太慢，或浏览器无法连通该地址。`;
+      if (/Failed to fetch|NetworkError|Load failed|fetch/i.test(message)) return `${context}失败：浏览器无法连到这个接口，常见原因是中转站不允许前端跨域 CORS，或域名/协议写错。`;
+      const status = Number((message.match(/\b(?:API|models)\s+(\d{3})\b/i) || [])[1]);
+      if (status === 400) return `${context}失败：请求格式不被该中转站接受，通常是接口不是 OpenAI 兼容格式。`;
+      if (status === 401) return `${context}失败：API Key 无效或鉴权格式不对。`;
+      if (status === 403) return `${context}失败：Key 没权限，或该中转站禁止浏览器前端调用。`;
+      if (status === 404) return `${context}失败：接口路径不对。可尝试只填 https://域名/v1，系统会自动补全。`;
+      if (status === 429) return `${context}失败：额度不足、限流，或请求太频繁。`;
+      if (status >= 500) return `${context}失败：中转站服务器异常。`;
+      if (/empty models/i.test(message)) return `${context}失败：模型列表为空，请改用自定义模型名。`;
+      if (/empty response/i.test(message)) return `${context}失败：模型没有返回内容，可能模型名不支持 chat completions。`;
+      if (/bad test json|模型返回的数字格式不合法|Unexpected token|JSON/i.test(message)) return `${context}失败：模型没有按要求返回 JSON，建议换更稳定的模型或自定义模型名。`;
+      return `${context}失败：${message || "未知错误"}`;
     }
 
     function preferredAutoModel() {
@@ -2986,8 +3028,8 @@
         state.modelDiscovery = { status: "ok", models, message: `已自动发现 ${models.length} 个模型。` };
         if (state.api.model !== "custom" && !models.some(model => model.id === state.api.model)) state.api.model = "auto";
         sessionStorage.setItem(API_KEY, JSON.stringify(state.api));
-      } catch {
-        state.modelDiscovery = { status: "error", models: [], message: "模型列表拉取失败，已切换手动选择。" };
+      } catch (error) {
+        state.modelDiscovery = { status: "error", models: [], message: `${describeApiError(error, "模型列表拉取")} 已切换手动选择。` };
         if (state.api.model === "auto") state.api.model = preferredAutoModel();
       }
       renderApiFields();
@@ -3004,7 +3046,7 @@
       setStatus(`正在测试模型 ${model}...`);
       const probeGuess = DIGITS.slice(0, state.length);
       try {
-        const res = await fetch(state.api.url, {
+        const res = await fetch(chatCompletionsUrl(state.api.url), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -3026,8 +3068,8 @@
         const data = JSON.parse(content.trim().startsWith("{") ? content.trim() : (content.match(/\{[\s\S]*\}/) || [""])[0]);
         if (!isValidNumber(String(data.guess || ""))) throw new Error("bad test json");
         setStatus(`模型 ${model} 可用。`, "win");
-      } catch {
-        setStatus(`模型 ${model} 测试失败。AI推演不会冒充本地结果，可单独用本地出牌。`, "error");
+      } catch (error) {
+        setStatus(`${describeApiError(error, `模型 ${model} 测试`)} AI推演不会冒充本地结果。`, "error");
       }
       render();
     }
@@ -3373,7 +3415,7 @@
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), AI_REVIEW_TIMEOUT_MS);
       try {
-        const res = await fetch(state.api.url, {
+        const res = await fetch(chatCompletionsUrl(state.api.url), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -3415,7 +3457,7 @@
         })
         .catch(error => {
           if (state.aiReview.key !== key) return;
-          state.aiReview = { key, status: "invalid", guess: "", reason: "", error: error.message || "AI 复核失败" };
+          state.aiReview = { key, status: "invalid", guess: "", reason: "", error: describeApiError(error, "AI 自动复核") };
           renderEndgame();
         });
     }
@@ -3455,7 +3497,7 @@
       state.thinking = true;
       setAiTrace([
         { state: "done", mark: "1", text: `整理上下文：${state.history.length} 轮战报，剩余 ${state.candidates.length} 个候选，本地先给 ${local.guess}。` },
-        { state: "pending", mark: "2", text: `请求外部模型：${model}。` },
+        { state: "pending", mark: "2", text: `请求外部模型：${model}，接口 ${chatCompletionsUrl(state.api.url)}。` },
         { state: "pending", mark: "3", text: "等待模型返回严格 JSON：guess / reason / confidence。" }
       ]);
       setStatus(`正在请求外部模型 ${model} 推演...`);
@@ -3469,8 +3511,9 @@
         state.aiReview = { key: contextKey(), status: "done", guess: ai.guess, reason: `${ai.model}：${ai.reason}`, error: "" };
         setStatus(`外部模型 ${model} 出牌 ${ai.guess}：${ai.reason}`);
       } catch (error) {
-        pushAiTrace({ state: "error", mark: "!", text: `外部模型推演失败：${error.message || "请求失败"}。没有自动使用本地算法。` });
-        setStatus("外部模型推演失败。未使用本地算法；可单独点击本地出牌。", "error");
+        const detail = describeApiError(error, "外部模型推演");
+        pushAiTrace({ state: "error", mark: "!", text: `${detail} 没有自动使用本地算法。` });
+        setStatus(`${detail} 未使用本地算法；可单独点击本地出牌。`, "error");
       } finally {
         state.thinking = false;
         render();
