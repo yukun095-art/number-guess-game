@@ -2865,7 +2865,7 @@
     }
 
     function detectConflictRound(history = state.history) {
-      if (!isExactCandidateMode() || history.length === 0 || candidatesAfter(history).length !== 0) return -1;
+      if (history.length === 0 || candidatesAfter(history).length !== 0) return -1;
       for (let i = history.length - 1; i >= 0; i -= 1) {
         const rest = history.filter((_, index) => index !== i);
         if (candidatesAfter(rest).length > 0) return i;
@@ -2879,8 +2879,7 @@
         let candidates = makeCandidates(state.length);
         state.history.forEach(item => {
           const before = candidates.length;
-          const filtered = candidates.filter(candidate => scoreGuess(item.guess, candidate) === item.hits);
-          candidates = filtered.length ? filtered : makeCandidates(state.length, [...rebuilt, item]);
+          candidates = makeCandidates(state.length, [...rebuilt, item], state.mode === "practice" ? [state.answer] : []);
           rebuilt.push({ ...item, before, remaining: candidates.length });
         });
         state.history = rebuilt;
@@ -3170,10 +3169,25 @@
       return out;
     }
 
-    function makeLongSampleCandidates(length, history = [], include = []) {
+    function isHistoryConsistent(value, history = state.history) {
+      return new RegExp(`^\\d{${value.length}}$`).test(value) && history.every(item => scoreGuess(item.guess, value) === item.hits);
+    }
+
+    function seededDigitOrder(seedText) {
+      const digits = [...DIGITS];
+      let seed = hashText(seedText);
+      for (let i = digits.length - 1; i > 0; i -= 1) {
+        seed = Math.imul(seed ^ (seed >>> 13), 1597334677) >>> 0;
+        const j = seed % (i + 1);
+        [digits[i], digits[j]] = [digits[j], digits[i]];
+      }
+      return digits;
+    }
+
+    function makeLongConstraintCandidates(length, history = [], include = []) {
       const target = LONG_SAMPLE_SIZE;
       const out = new Set();
-      const consistent = value => new RegExp(`^\\d{${length}}$`).test(value) && history.every(item => scoreGuess(item.guess, value) === item.hits);
+      const consistent = value => new RegExp(`^\\d{${length}}$`).test(value) && isHistoryConsistent(value, history);
       const add = value => {
         const clean = String(value || "").replace(/\D/g, "").slice(0, length);
         if (clean.length === length && consistent(clean)) out.add(clean);
@@ -3183,18 +3197,66 @@
       openingCandidates(length).forEach(add);
       for (const digit of DIGITS) add(digit.repeat(length));
 
-      let attempts = 0;
-      const maxAttempts = target * 18;
       const seedBase = `${length}|${history.map(item => `${item.guess}:${item.hits}`).join(",")}`;
-      while (out.size < target && attempts < maxAttempts) {
-        add(seededCandidate(length, `${seedBase}|${attempts}`));
-        attempts += 1;
+      if (!history.length) {
+        let attempts = 0;
+        while (out.size < target && attempts < target * 2) {
+          add(seededCandidate(length, `${seedBase}|${attempts}`));
+          attempts += 1;
+        }
+        return [...out];
+      }
+
+      const rows = history.map(item => ({ guess: item.guess, hits: item.hits }));
+      const maxVisits = target * 900;
+      let visits = 0;
+
+      const canStillMatch = (position, matches) => {
+        const remaining = length - position;
+        for (let i = 0; i < rows.length; i += 1) {
+          if (matches[i] > rows[i].hits) return false;
+          if (matches[i] + remaining < rows[i].hits) return false;
+        }
+        return true;
+      };
+
+      const buildOne = seedText => {
+        const orderByPosition = Array.from({ length }, (_, index) => seededDigitOrder(`${seedText}|${index}`));
+        const result = Array(length).fill("0");
+        const matches = Array(rows.length).fill(0);
+        function dfs(position) {
+          visits += 1;
+          if (visits > maxVisits) return false;
+          if (position === length) {
+            if (matches.every((count, index) => count === rows[index].hits)) {
+              add(result.join(""));
+              return true;
+            }
+            return false;
+          }
+          for (const digit of orderByPosition[position]) {
+            const next = matches.map((count, index) => count + (rows[index].guess[position] === digit ? 1 : 0));
+            if (!canStillMatch(position + 1, next)) continue;
+            result[position] = digit;
+            for (let i = 0; i < matches.length; i += 1) matches[i] = next[i];
+            if (dfs(position + 1) && out.size >= target) return true;
+            for (let i = 0; i < matches.length; i += 1) matches[i] = next[i] - (rows[i].guess[position] === digit ? 1 : 0);
+          }
+          return false;
+        }
+        dfs(0);
+      };
+
+      let seedIndex = 0;
+      while (out.size < target && visits < maxVisits && seedIndex < target * 4) {
+        buildOne(`${seedBase}|solve|${seedIndex}`);
+        seedIndex += 1;
       }
       return [...out];
     }
 
     function makeCandidates(length, history = [], include = []) {
-      if (!isExactCandidateMode(length)) return makeLongSampleCandidates(length, history, include);
+      if (!isExactCandidateMode(length)) return makeLongConstraintCandidates(length, history, include);
       const total = 10 ** length;
       const list = new Array(total);
       for (let i = 0; i < total; i += 1) list[i] = padNumber(i, length);
@@ -3206,11 +3268,11 @@
     }
 
     function candidateCountLabel(count = state.candidates.length) {
-      return isExactCandidateMode() ? formatCount(count) : `样本${formatCount(count)}`;
+      return isExactCandidateMode() ? formatCount(count) : `可行样本${formatCount(count)}`;
     }
 
     function candidateStatusText(count = state.candidates.length) {
-      return isExactCandidateMode() ? `${formatCount(count)} 张候选牌` : `${formatCount(count)} 张样本候选`;
+      return isExactCandidateMode() ? `${formatCount(count)} 张候选牌` : `${formatCount(count)} 张约束可行样本`;
     }
 
     function secureRandomInt(max) {
@@ -3248,10 +3310,7 @@
     function filterCandidates() {
       if (!isExactCandidateMode()) {
         const include = state.mode === "practice" ? [state.answer] : [];
-        const filtered = state.candidates.filter(candidate =>
-          state.history.every(item => scoreGuess(item.guess, candidate) === item.hits)
-        );
-        state.candidates = filtered.length || !state.history.length ? filtered : makeCandidates(state.length, state.history, include);
+        state.candidates = makeCandidates(state.length, state.history, include);
         return;
       }
       state.candidates = state.candidates.filter(candidate =>
@@ -4053,6 +4112,7 @@
       if (state.solved && state.history.length <= Math.ceil(state.length * 1.4)) return "神之一手";
       if (state.solved) return "破局";
       if (state.candidates.length === 0) return "冲突";
+      if (!isExactCandidateMode()) return state.history.length ? "约束推理" : "样本开局";
       if (state.candidates.length <= 12) return "收尾";
       return "推进中";
     }
@@ -4120,7 +4180,7 @@
       els.rankTag.textContent = rankLabel();
       els.badgeList.innerHTML = "";
       const badges = [`${state.length}位`, "可重复"];
-      if (!isExactCandidateMode()) badges.push("长位数样本");
+      if (!isExactCandidateMode()) badges.push("约束求解");
       if (state.mode === "advisor") badges.push(state.api.key ? "外部军师" : "本地兜底");
       if (state.mode === "pk") badges.push("双人同屏");
       if (state.candidates.length <= 12 && state.mode !== "pk") badges.push("收尾候选");
@@ -4199,7 +4259,7 @@
             <div class="empty-grid">
               <div class="mini-tile"><span>可试探</span><strong>${escapeHtml(DIGITS.slice(0, state.length))}</strong></div>
               <div class="mini-tile"><span>当前目标</span><strong>拿到首条反馈</strong></div>
-              <div class="mini-tile"><span>${isExactCandidateMode() ? "候选总量" : "样本池"}</span><strong>${isExactCandidateMode() ? formatCount(totalCount()) : candidateCountLabel()}</strong></div>
+              <div class="mini-tile"><span>${isExactCandidateMode() ? "候选总量" : "可行样本"}</span><strong>${isExactCandidateMode() ? formatCount(totalCount()) : candidateCountLabel()}</strong></div>
               <div class="mini-tile"><span>下一步</span><strong>提交猜测</strong></div>
             </div>
           </div>
@@ -4289,7 +4349,7 @@
 
       if (state.history.length === 0) {
         els.trackerRows.innerHTML = `
-          <div class="tracker-empty">${exact ? `初始牌池 ${formatCount(totalCount())} 张。` : `长位数启用 ${formatCount(state.candidates.length)} 张稳定样本池。`}录入第一条反馈后，这里会显示每轮剩余、淘汰和压缩幅度。</div>
+          <div class="tracker-empty">${exact ? `初始牌池 ${formatCount(totalCount())} 张。` : `长位数启用约束求解，每轮重建 ${formatCount(state.candidates.length)} 张可行样本。`}录入第一条反馈后，这里会显示每轮样本变化和反馈轨迹。</div>
         `;
         return;
       }
@@ -4498,7 +4558,7 @@
         `剩余 ${candidateStatusText(count)}，${sourceLabel(details.source)}出牌 ${details.guess}。`,
         details.reason
       ];
-      if (!isExactCandidateMode()) parts.push("7-9 位使用稳定样本池推理，避免浏览器枚举上亿候选。");
+      if (!isExactCandidateMode()) parts.push("7-9 位使用约束求解重建可行样本，避免把真实答案误排除。");
       if (count <= ENDGAME_LIMIT && !state.api.key) parts.push("未保存 API Key，当前只用本地强力收尾。");
       if (review.status === "loading") parts.push("外部 AI 正在后台复核，本地建议可先用。");
       if (review.status === "done" && review.reason) parts.push(`AI复核：${review.reason}`);
