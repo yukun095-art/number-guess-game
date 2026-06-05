@@ -2184,6 +2184,9 @@
             <button class="btn small" data-home-length="4" type="button">4位</button>
             <button class="btn small active" data-home-length="5" type="button">5位</button>
             <button class="btn small" data-home-length="6" type="button">6位</button>
+            <button class="btn small" data-home-length="7" type="button">7位</button>
+            <button class="btn small" data-home-length="8" type="button">8位</button>
+            <button class="btn small" data-home-length="9" type="button">9位</button>
           </div>
         </div>
       </header>
@@ -2519,6 +2522,8 @@
     ];
     const ENDGAME_LIMIT = 100;
     const TWO_STEP_LIMIT = 50;
+    const EXACT_CANDIDATE_MAX_LENGTH = 6;
+    const LONG_SAMPLE_SIZE = 12000;
     const AI_REVIEW_TIMEOUT_MS = 8500;
 
     const state = {
@@ -2793,6 +2798,7 @@
     }
 
     function candidatesAfter(history = state.history) {
+      if (!isExactCandidateMode()) return makeCandidates(state.length, history);
       let candidates = makeCandidates(state.length);
       for (const item of history) {
         candidates = candidates.filter(candidate => scoreGuess(item.guess, candidate) === item.hits);
@@ -2802,7 +2808,7 @@
     }
 
     function detectConflictRound(history = state.history) {
-      if (history.length === 0 || candidatesAfter(history).length !== 0) return -1;
+      if (!isExactCandidateMode() || history.length === 0 || candidatesAfter(history).length !== 0) return -1;
       for (let i = history.length - 1; i >= 0; i -= 1) {
         const rest = history.filter((_, index) => index !== i);
         if (candidatesAfter(rest).length > 0) return i;
@@ -2811,6 +2817,21 @@
     }
 
     function recalcAdvisor({ autoReview = true } = {}) {
+      if (!isExactCandidateMode()) {
+        const rebuilt = [];
+        let candidates = makeCandidates(state.length);
+        state.history.forEach(item => {
+          const before = candidates.length;
+          const filtered = candidates.filter(candidate => scoreGuess(item.guess, candidate) === item.hits);
+          candidates = filtered.length ? filtered : makeCandidates(state.length, [...rebuilt, item]);
+          rebuilt.push({ ...item, before, remaining: candidates.length });
+        });
+        state.history = rebuilt;
+        state.candidates = candidates;
+        state.conflictIndex = detectConflictRound();
+        refreshAdvisorSuggestion({ autoReview });
+        return;
+      }
       let candidates = makeCandidates(state.length);
       state.history = state.history.map(item => {
         const before = candidates.length;
@@ -3078,7 +3099,45 @@
       return String(num).padStart(length, "0");
     }
 
-    function makeCandidates(length) {
+    function isExactCandidateMode(length = state.length) {
+      return length <= EXACT_CANDIDATE_MAX_LENGTH;
+    }
+
+    function seededCandidate(length, seedText) {
+      let seed = hashText(seedText);
+      let out = "";
+      for (let i = 0; i < length; i += 1) {
+        seed = Math.imul(seed ^ (seed >>> 13), 1597334677) >>> 0;
+        out += String(seed % 10);
+      }
+      return out;
+    }
+
+    function makeLongSampleCandidates(length, history = [], include = []) {
+      const target = LONG_SAMPLE_SIZE;
+      const out = new Set();
+      const consistent = value => new RegExp(`^\\d{${length}}$`).test(value) && history.every(item => scoreGuess(item.guess, value) === item.hits);
+      const add = value => {
+        const clean = String(value || "").replace(/\D/g, "").slice(0, length);
+        if (clean.length === length && consistent(clean)) out.add(clean);
+      };
+
+      include.forEach(add);
+      openingCandidates(length).forEach(add);
+      for (const digit of DIGITS) add(digit.repeat(length));
+
+      let attempts = 0;
+      const maxAttempts = target * 18;
+      const seedBase = `${length}|${history.map(item => `${item.guess}:${item.hits}`).join(",")}`;
+      while (out.size < target && attempts < maxAttempts) {
+        add(seededCandidate(length, `${seedBase}|${attempts}`));
+        attempts += 1;
+      }
+      return [...out];
+    }
+
+    function makeCandidates(length, history = [], include = []) {
+      if (!isExactCandidateMode(length)) return makeLongSampleCandidates(length, history, include);
       const total = 10 ** length;
       const list = new Array(total);
       for (let i = 0; i < total; i += 1) list[i] = padNumber(i, length);
@@ -3087,6 +3146,14 @@
 
     function totalCount() {
       return 10 ** state.length;
+    }
+
+    function candidateCountLabel(count = state.candidates.length) {
+      return isExactCandidateMode() ? formatCount(count) : `样本${formatCount(count)}`;
+    }
+
+    function candidateStatusText(count = state.candidates.length) {
+      return isExactCandidateMode() ? `${formatCount(count)} 张候选牌` : `${formatCount(count)} 张样本候选`;
     }
 
     function secureRandomInt(max) {
@@ -3122,6 +3189,14 @@
     }
 
     function filterCandidates() {
+      if (!isExactCandidateMode()) {
+        const include = state.mode === "practice" ? [state.answer] : [];
+        const filtered = state.candidates.filter(candidate =>
+          state.history.every(item => scoreGuess(item.guess, candidate) === item.hits)
+        );
+        state.candidates = filtered.length || !state.history.length ? filtered : makeCandidates(state.length, state.history, include);
+        return;
+      }
       state.candidates = state.candidates.filter(candidate =>
         state.history.every(item => scoreGuess(item.guess, candidate) === item.hits)
       );
@@ -3153,7 +3228,8 @@
     function openingCandidates(length = state.length) {
       if (length === 4) return ["0123", "4567", "8901", "2580", "3691"];
       if (length === 5) return ["01234", "56789", "02468", "13579", "90817", "36425"];
-      return ["012345", "456789", "024680", "135791", "908172", "364250"];
+      return ["012345678", "987654321", "024680246", "135791357", "908172635", "364250817"]
+        .map(item => item.slice(0, length));
     }
 
     function profile(guess, candidates) {
@@ -3581,7 +3657,7 @@
       state.input = "";
       state.currentGuess = "";
       state.history = [];
-      state.candidates = makeCandidates(state.length);
+      state.candidates = makeCandidates(state.length, [], state.mode === "practice" ? [state.answer] : []);
       state.solved = false;
       state.thinking = false;
       state.conflictIndex = -1;
@@ -3681,7 +3757,7 @@
         setStatus("反馈冲突：没有任何候选满足战报。撤销上一轮核对。", "error");
       } else {
         refreshAdvisorSuggestion();
-        setStatus(`反馈 ${hits}/${state.length} 已记录，剩余 ${state.candidates.length} 张候选牌。`);
+        setStatus(`反馈 ${hits}/${state.length} 已记录，剩余 ${candidateStatusText()}。`);
       }
       render();
     }
@@ -3726,7 +3802,7 @@
       } else if (state.candidates.length === 0) {
         setStatus("补录后出现冲突。请核对高亮战报或编辑上一轮反馈。", "error");
       } else {
-        setStatus(`已补录战报，剩余 ${state.candidates.length} 张候选牌。`);
+        setStatus(`已补录战报，剩余 ${candidateStatusText()}。`);
       }
       render();
     }
@@ -3927,7 +4003,7 @@
     function renderHud() {
       els.hudLength.textContent = String(state.length);
       els.hudRounds.textContent = state.mode === "pk" ? String(state.pk.round) : String(state.history.length);
-      els.hudCandidates.textContent = state.mode === "pk" ? "-" : String(state.candidates.length);
+      els.hudCandidates.textContent = state.mode === "pk" ? "-" : candidateCountLabel();
       els.hudTime.textContent = formatTime(state.elapsed);
     }
 
@@ -3980,13 +4056,14 @@
 
     function renderMetrics() {
       const eliminated = state.mode === "pk" ? 0 : Math.round((1 - state.candidates.length / (10 ** state.length)) * 100);
-      els.metricEliminate.textContent = state.mode === "pk" ? "-" : `${Math.max(0, eliminated)}%`;
+      els.metricEliminate.textContent = state.mode === "pk" ? "-" : (isExactCandidateMode() ? `${Math.max(0, eliminated)}%` : "样本");
       els.metricBest.textContent = state.mode === "pk" ? "本地局" : recordLabel();
       els.metricState.textContent = rankLabel();
       els.metricAi.textContent = state.mode === "advisor" ? (state.api.key ? activeModel() : "本地") : "关闭";
       els.rankTag.textContent = rankLabel();
       els.badgeList.innerHTML = "";
       const badges = [`${state.length}位`, "可重复"];
+      if (!isExactCandidateMode()) badges.push("长位数样本");
       if (state.mode === "advisor") badges.push(state.api.key ? "外部军师" : "本地兜底");
       if (state.mode === "pk") badges.push("双人同屏");
       if (state.candidates.length <= 12 && state.mode !== "pk") badges.push("收尾候选");
@@ -4013,7 +4090,7 @@
     function renderPlayTips() {
       const rows = [];
       if (state.mode === "practice") {
-        rows.push(["目标", state.history.length ? `继续缩小候选，当前还剩 ${state.candidates.length} 张。` : "先打一张覆盖差异大的猜测牌，反馈会自动写入战报。"]);
+        rows.push(["目标", state.history.length ? `继续缩小候选，当前还剩 ${candidateStatusText()}。` : "先打一张覆盖差异大的猜测牌，反馈会自动写入战报。"]);
         rows.push(["规则", "只算数字和位置都正确的命中数；0 开头和重复数字都合法。"]);
         rows.push(["快捷", "数字键输入，Backspace 退格，Enter 提交。"]);
       } else if (state.mode === "advisor") {
@@ -4065,7 +4142,7 @@
             <div class="empty-grid">
               <div class="mini-tile"><span>可试探</span><strong>${escapeHtml(DIGITS.slice(0, state.length))}</strong></div>
               <div class="mini-tile"><span>当前目标</span><strong>拿到首条反馈</strong></div>
-              <div class="mini-tile"><span>候选总量</span><strong>${totalCount()}</strong></div>
+              <div class="mini-tile"><span>${isExactCandidateMode() ? "候选总量" : "样本池"}</span><strong>${isExactCandidateMode() ? formatCount(totalCount()) : candidateCountLabel()}</strong></div>
               <div class="mini-tile"><span>下一步</span><strong>提交猜测</strong></div>
             </div>
           </div>
@@ -4079,7 +4156,7 @@
           <p>行动卡已经给出首猜。录入对手反馈后，右侧会变成逐轮战报。</p>
           <div class="empty-grid">
             <div class="mini-tile"><span>首猜</span><strong>${escapeHtml(state.currentGuess || "-")}</strong></div>
-            <div class="mini-tile"><span>候选</span><strong>${state.candidates.length}</strong></div>
+            <div class="mini-tile"><span>候选</span><strong>${candidateCountLabel()}</strong></div>
             <div class="mini-tile"><span>本地策略</span><strong>minmax + 熵</strong></div>
             <div class="mini-tile"><span>下一步</span><strong>选择反馈</strong></div>
           </div>
@@ -4109,7 +4186,7 @@
       }
       [...state.history].reverse().forEach((item, index) => {
         const originalIndex = state.history.length - 1 - index;
-        addHistoryCard(`#${state.history.length - index}`, item.guess, item.hits, `剩余 ${item.remaining ?? state.candidates.length} 张候选牌`, originalIndex === state.conflictIndex);
+        addHistoryCard(`#${state.history.length - index}`, item.guess, item.hits, `剩余 ${candidateStatusText(item.remaining ?? state.candidates.length)}`, originalIndex === state.conflictIndex);
       });
     }
 
@@ -4129,7 +4206,8 @@
       els.candidateTrackerPanel.classList.toggle("hidden", !active);
       if (!active) return;
 
-      const total = totalCount();
+      const exact = isExactCandidateMode();
+      const total = exact ? totalCount() : state.candidates.length;
       const current = state.candidates.length;
       const eliminated = Math.max(0, total - current);
       const compression = current > 0 ? total / current : 0;
@@ -4143,9 +4221,9 @@
 
       els.trackerStage.textContent = trackerStageLabel(current);
       const stats = [
-        ["当前剩余", `${formatCount(current)}张`],
-        ["已淘汰", `${formatCount(eliminated)}张`],
-        ["压缩倍率", current > 0 ? `${formatCount(Math.round(compression))}x` : "冲突"],
+        [exact ? "当前剩余" : "样本剩余", candidateStatusText(current)],
+        [exact ? "已淘汰" : "样本规模", exact ? `${formatCount(eliminated)}张` : `${formatCount(current)}张`],
+        [exact ? "压缩倍率" : "推理口径", exact ? (current > 0 ? `${formatCount(Math.round(compression))}x` : "冲突") : "快速样本"],
         ["最大杀伤", bestRound && bestRound.killed > 0 ? `第${bestRound.index + 1}轮` : "等待"]
       ];
       els.trackerSummary.innerHTML = stats.map(([label, value]) => `
@@ -4154,7 +4232,7 @@
 
       if (state.history.length === 0) {
         els.trackerRows.innerHTML = `
-          <div class="tracker-empty">初始牌池 ${formatCount(total)} 张。录入第一条反馈后，这里会像记牌器一样显示每轮剩余、淘汰和压缩幅度。</div>
+          <div class="tracker-empty">${exact ? `初始牌池 ${formatCount(totalCount())} 张。` : `长位数启用 ${formatCount(state.candidates.length)} 张稳定样本池。`}录入第一条反馈后，这里会显示每轮剩余、淘汰和压缩幅度。</div>
         `;
         return;
       }
@@ -4177,8 +4255,8 @@
             </div>
             <div class="tracker-meter" style="--remain:${Math.max(0, Math.min(1, remainRatio)).toFixed(4)}; --kill:${Math.max(0, Math.min(1, killRatio)).toFixed(4)}"></div>
             <div class="tracker-line">
-              <span>本轮淘汰 ${formatCount(killed)}</span>
-              <span>杀伤 ${formatPercent(killRatio)}</span>
+              <span>${exact ? "本轮淘汰" : "样本淘汰"} ${formatCount(killed)}</span>
+              <span>${exact ? "杀伤" : "样本"} ${formatPercent(killRatio)}</span>
             </div>
           </div>
           <span class="tracker-hit">${item.hits}/${state.length}</span>
@@ -4360,9 +4438,10 @@
       els.endgameSolveChance.textContent = `${Math.round((details.solveChance || 0) * 100)}%`;
 
       const parts = [
-        `剩余 ${count} 个候选，${sourceLabel(details.source)}出牌 ${details.guess}。`,
+        `剩余 ${candidateStatusText(count)}，${sourceLabel(details.source)}出牌 ${details.guess}。`,
         details.reason
       ];
+      if (!isExactCandidateMode()) parts.push("7-9 位使用稳定样本池推理，避免浏览器枚举上亿候选。");
       if (count <= ENDGAME_LIMIT && !state.api.key) parts.push("未保存 API Key，当前只用本地强力收尾。");
       if (review.status === "loading") parts.push("外部 AI 正在后台复核，本地建议可先用。");
       if (review.status === "done" && review.reason) parts.push(`AI复核：${review.reason}`);
@@ -4385,7 +4464,7 @@
         const item = state.history[state.conflictIndex];
         els.conflictCoach.textContent = `冲突定位：优先核对第 ${state.conflictIndex + 1} 轮，猜 ${item.guess}，反馈 ${item.hits}/${state.length}。可以点“编辑上一轮反馈”或撤销后重录。`;
       } else if (state.candidates.length <= 12 && state.candidates.length > 0) {
-        els.conflictCoach.textContent = `收尾阶段：还剩 ${state.candidates.length} 张候选牌，优先使用候选牌堆里的数字确认。`;
+        els.conflictCoach.textContent = `收尾阶段：还剩 ${candidateStatusText()}，优先使用候选牌堆里的数字确认。`;
       } else {
         els.conflictCoach.textContent = "反馈冲突时，军师会指出最该核对的一轮。";
       }
