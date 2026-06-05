@@ -1053,6 +1053,172 @@
       line-height: 1.45;
     }
 
+    .tracker-panel {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding: 10px;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.14) 0 12px, transparent 12px),
+        oklch(0.82 0.065 92);
+      border: 3px solid var(--line);
+      box-shadow: inset 0 -6px 0 rgba(72, 39, 13, .10);
+    }
+
+    .tracker-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tracker-head strong {
+      color: oklch(0.21 0.06 52);
+      font-size: 16px;
+    }
+
+    .tracker-head span {
+      display: inline-flex;
+      min-height: 26px;
+      align-items: center;
+      padding: 3px 7px;
+      color: var(--light);
+      background: var(--green-dark);
+      border: 3px solid var(--line);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .tracker-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .tracker-stat {
+      min-height: 56px;
+      padding: 7px;
+      background: var(--card);
+      border: 3px solid var(--line);
+    }
+
+    .tracker-stat span {
+      display: block;
+      margin-bottom: 5px;
+      color: oklch(0.34 0.045 62);
+      font-size: 10px;
+    }
+
+    .tracker-stat strong {
+      display: block;
+      color: oklch(0.21 0.06 52);
+      font-size: 17px;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+
+    .tracker-bars {
+      display: grid;
+      gap: 7px;
+    }
+
+    .tracker-row {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr) 52px;
+      gap: 8px;
+      align-items: center;
+      padding: 7px;
+      background: rgba(255, 239, 177, .44);
+      border: 3px solid var(--line);
+    }
+
+    .tracker-row.conflict {
+      outline: 3px solid var(--red);
+      outline-offset: 1px;
+    }
+
+    .tracker-round {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      color: var(--ink);
+      background: var(--gold);
+      border: 3px solid var(--line);
+      font-size: 12px;
+    }
+
+    .tracker-main {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+    }
+
+    .tracker-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .tracker-line strong {
+      color: oklch(0.21 0.06 52);
+      overflow-wrap: anywhere;
+    }
+
+    .tracker-line span {
+      color: oklch(0.34 0.045 62);
+      white-space: nowrap;
+    }
+
+    .tracker-meter {
+      position: relative;
+      height: 10px;
+      overflow: hidden;
+      background: oklch(0.67 0.05 70);
+      border: 2px solid var(--line);
+    }
+
+    .tracker-meter::before,
+    .tracker-meter::after {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: calc(var(--remain, 0) * 100%);
+      background: var(--green);
+    }
+
+    .tracker-meter::after {
+      width: calc(var(--kill, 0) * 100%);
+      background: var(--red);
+      opacity: .68;
+      mix-blend-mode: multiply;
+    }
+
+    .tracker-hit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      color: var(--light);
+      background: var(--red);
+      border: 3px solid var(--line);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .tracker-empty {
+      padding: 8px;
+      color: oklch(0.30 0.04 70);
+      background: rgba(255, 239, 177, .34);
+      border: 3px dashed oklch(0.27 0.055 55);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
     .history-list {
       display: grid;
       align-content: start;
@@ -1065,7 +1231,7 @@
 
     .side-stack .panel:last-child {
       display: grid;
-      grid-template-rows: auto 1fr;
+      grid-template-rows: auto auto 1fr;
       min-height: 0;
     }
 
@@ -1380,6 +1546,16 @@
       .metrics, .empty-grid {
         grid-template-columns: 1fr;
       }
+      .tracker-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .tracker-row {
+        grid-template-columns: 42px minmax(0, 1fr);
+      }
+      .tracker-hit {
+        grid-column: 1 / -1;
+        justify-self: start;
+      }
       .history-card {
         grid-template-columns: auto minmax(0, 1fr);
       }
@@ -1610,6 +1786,18 @@
       .history-list {
         min-height: 190px;
       }
+      .tracker-panel {
+        gap: 8px;
+        margin-bottom: 8px;
+        padding: 8px;
+      }
+      .tracker-stat {
+        min-height: 48px;
+        padding: 6px;
+      }
+      .tracker-stat strong {
+        font-size: 15px;
+      }
     }
 
     @media (max-height: 680px) and (min-width: 761px) {
@@ -1742,6 +1930,12 @@
       }
       .history-list {
         min-height: 160px;
+      }
+      .tracker-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .tracker-row {
+        padding: 6px;
       }
     }
 
@@ -2257,6 +2451,14 @@
               <h2 id="historyTitle">战报牌堆</h2>
               <span class="tag" id="historyTag">0轮</span>
             </div>
+            <div class="tracker-panel" id="candidateTrackerPanel">
+              <div class="tracker-head">
+                <strong>候选记牌器</strong>
+                <span id="trackerStage">待反馈</span>
+              </div>
+              <div class="tracker-summary" id="trackerSummary"></div>
+              <div class="tracker-bars" id="trackerRows"></div>
+            </div>
             <div class="history-list" id="historyList"></div>
           </section>
         </aside>
@@ -2461,6 +2663,10 @@
       candidateList: document.getElementById("candidateList"),
       historyTitle: document.getElementById("historyTitle"),
       historyTag: document.getElementById("historyTag"),
+      candidateTrackerPanel: document.getElementById("candidateTrackerPanel"),
+      trackerStage: document.getElementById("trackerStage"),
+      trackerSummary: document.getElementById("trackerSummary"),
+      trackerRows: document.getElementById("trackerRows"),
       historyList: document.getElementById("historyList"),
       playTips: document.getElementById("playTips"),
       tutorialOverlay: document.getElementById("tutorialOverlay"),
@@ -3104,6 +3310,17 @@
       if (!Number.isFinite(Number(value))) return "-";
       const number = Number(value);
       return number >= 10 ? String(Math.round(number)) : number.toFixed(1);
+    }
+
+    function formatCount(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "-";
+      return number.toLocaleString("zh-CN");
+    }
+
+    function formatPercent(value, digits = 0) {
+      const number = Math.max(0, Math.min(1, Number(value) || 0));
+      return `${(number * 100).toFixed(digits)}%`;
     }
 
     function apiPayload(fallback, mode = "manual") {
@@ -3853,6 +4070,80 @@
       });
     }
 
+    function trackerStageLabel(count = state.candidates.length) {
+      if (state.mode === "pk") return "双方局";
+      if (state.conflictIndex >= 0 || count === 0) return "反馈冲突";
+      if (count <= 1) return "候选唯一";
+      if (count <= 12) return "完整候选";
+      if (count <= 50) return "精准收尾";
+      if (count <= ENDGAME_LIMIT) return "强力收尾";
+      return state.history.length ? "压缩中" : "待反馈";
+    }
+
+    function renderCandidateTracker() {
+      if (!els.candidateTrackerPanel) return;
+      const active = state.mode !== "pk";
+      els.candidateTrackerPanel.classList.toggle("hidden", !active);
+      if (!active) return;
+
+      const total = totalCount();
+      const current = state.candidates.length;
+      const eliminated = Math.max(0, total - current);
+      const compression = current > 0 ? total / current : 0;
+      const bestRound = state.history.reduce((best, item, index) => {
+        const before = Number(item.before ?? total);
+        const remaining = Number(item.remaining ?? current);
+        const killed = Math.max(0, before - remaining);
+        if (!best || killed > best.killed) return { index, killed, before, remaining };
+        return best;
+      }, null);
+
+      els.trackerStage.textContent = trackerStageLabel(current);
+      const stats = [
+        ["当前剩余", `${formatCount(current)}张`],
+        ["已淘汰", `${formatCount(eliminated)}张`],
+        ["压缩倍率", current > 0 ? `${formatCount(Math.round(compression))}x` : "冲突"],
+        ["最大杀伤", bestRound && bestRound.killed > 0 ? `第${bestRound.index + 1}轮` : "等待"]
+      ];
+      els.trackerSummary.innerHTML = stats.map(([label, value]) => `
+        <div class="tracker-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>
+      `).join("");
+
+      if (state.history.length === 0) {
+        els.trackerRows.innerHTML = `
+          <div class="tracker-empty">初始牌池 ${formatCount(total)} 张。录入第一条反馈后，这里会像记牌器一样显示每轮剩余、淘汰和压缩幅度。</div>
+        `;
+        return;
+      }
+
+      els.trackerRows.innerHTML = "";
+      state.history.forEach((item, index) => {
+        const before = Math.max(0, Number(item.before ?? (index === 0 ? total : state.history[index - 1]?.remaining ?? total)));
+        const remaining = Math.max(0, Number(item.remaining ?? current));
+        const killed = Math.max(0, before - remaining);
+        const remainRatio = total ? remaining / total : 0;
+        const killRatio = before ? killed / before : 0;
+        const row = document.createElement("div");
+        row.className = `tracker-row${index === state.conflictIndex ? " conflict" : ""}`;
+        row.innerHTML = `
+          <span class="tracker-round">#${index + 1}</span>
+          <div class="tracker-main">
+            <div class="tracker-line">
+              <strong>${escapeHtml(item.guess)}</strong>
+              <span>${formatCount(before)} -> ${formatCount(remaining)}</span>
+            </div>
+            <div class="tracker-meter" style="--remain:${Math.max(0, Math.min(1, remainRatio)).toFixed(4)}; --kill:${Math.max(0, Math.min(1, killRatio)).toFixed(4)}"></div>
+            <div class="tracker-line">
+              <span>本轮淘汰 ${formatCount(killed)}</span>
+              <span>杀伤 ${formatPercent(killRatio)}</span>
+            </div>
+          </div>
+          <span class="tracker-hit">${item.hits}/${state.length}</span>
+        `;
+        els.trackerRows.appendChild(row);
+      });
+    }
+
     function addHistoryCard(label, guess, hits, sub, conflict = false) {
       const row = document.createElement("div");
       row.className = `history-card${conflict ? " conflict" : ""}`;
@@ -4081,6 +4372,7 @@
       renderMetrics();
       renderCandidates();
       renderPlayTips();
+      renderCandidateTracker();
       renderHistory();
       renderHardSecret();
       renderOpponentFeedback();
